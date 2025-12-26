@@ -3,7 +3,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'signup_screen.dart';
-import 'user_details_screen.dart';
+import 'secondary/edit_profile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,18 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         final user = _authService.currentUser;
         if (user != null) {
-          final isRegistered = await _authService.isUserRegistered(user.uid);
           if (mounted) {
-            if (isRegistered) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-              );
-            } else {
+            if (user.displayName == null || user.displayName!.isEmpty) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) =>
-                      UserDetailsScreen(uid: user.uid, email: user.email),
+                      const EditProfileScreen(isOnboarding: true),
                 ),
+              );
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
               );
             }
           }

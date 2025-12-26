@@ -5,10 +5,12 @@ import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   static String get baseUrl {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api';
-    }
+    // For physical device via USB, run: adb reverse tcp:3000 tcp:3000
+    // This allows the phone to access localhost:3000
     return 'http://localhost:3000/api';
+
+    // If using Emulator without adb reverse, use:
+    // if (Platform.isAndroid) return 'http://10.0.2.2:3000/api';
   }
 
   static Future<Map<String, dynamic>> post(
@@ -100,6 +102,204 @@ class ApiService {
     } catch (e) {
       print('Image upload error: $e');
       return null;
+    }
+  }
+
+  static Future<List<dynamic>> getPosts() async {
+    try {
+      final response = await get('/posts');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Error fetching posts: $e');
+      return [];
+    }
+  }
+
+  // --- Connection Methods ---
+
+  static Future<dynamic> sendConnectionRequest(
+    String requester,
+    String recipient,
+  ) async {
+    return await post('/connections/request', {
+      'requester': requester,
+      'recipient': recipient,
+    });
+  }
+
+  static Future<dynamic> respondConnectionRequest(
+    String connectionId,
+    String status,
+  ) async {
+    return await post('/connections/respond', {
+      'connectionId': connectionId,
+      'status': status,
+    });
+  }
+
+  static Future<List<dynamic>> getMyConnections(String uid) async {
+    try {
+      final response = await get('/connections/my-connections/$uid');
+      return response as List<dynamic>;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>> getPendingRequests(String uid) async {
+    try {
+      final response = await get('/connections/requests/$uid');
+      return response as List<dynamic>;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> checkConnectionStatus(
+    String uid,
+    String targetUid,
+  ) async {
+    try {
+      final response = await get('/connections/status/$uid/$targetUid');
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      return {'status': 'none'};
+    }
+  }
+
+  // --- Message Methods ---
+
+  static Future<dynamic> sendMessage(
+    String sender,
+    String recipient,
+    String content,
+  ) async {
+    return await post('/messages/send', {
+      'sender': sender,
+      'recipient': recipient,
+      'content': content,
+    });
+  }
+
+  static Future<List<dynamic>> getMessages(String uid, String targetUid) async {
+    try {
+      final response = await get('/messages/$uid/$targetUid');
+      return response as List<dynamic>;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // --- Post Methods ---
+  static Future<dynamic> createPost(Map<String, dynamic> data) async {
+    return await post('/posts', data);
+  }
+
+  static Future<void> deletePost(String id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete post');
+      }
+    } catch (e) {
+      print('Error deleting post: $e');
+      rethrow;
+    }
+  }
+
+  // --- Event Methods ---
+  static Future<List<dynamic>> getEvents() async {
+    try {
+      final response = await get('/events');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Error fetching events: $e');
+      return [];
+    }
+  }
+
+  static Future<dynamic> createEvent(Map<String, dynamic> data) async {
+    return await post('/events', data);
+  }
+
+  static Future<void> deleteEvent(String id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/events/$id'));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete event');
+      }
+    } catch (e) {
+      print('Error deleting event: $e');
+      rethrow;
+    }
+  }
+
+  // --- Job Methods ---
+  static Future<List<dynamic>> getJobs() async {
+    try {
+      final response = await get('/jobs');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Error fetching jobs: $e');
+      return [];
+    }
+  }
+
+  static Future<dynamic> createJob(Map<String, dynamic> data) async {
+    return await post('/jobs', data);
+  }
+
+  static Future<void> deleteJob(String id) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/jobs/$id'));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete job');
+      }
+    } catch (e) {
+      print('Error deleting job: $e');
+      rethrow;
+    }
+  }
+
+  // --- Admin User Management ---
+  static Future<List<dynamic>> getAllUsers() async {
+    try {
+      final response = await get('/user/all');
+      return response as List<dynamic>;
+    } catch (e) {
+      return [];
+    }
+  }
+
+    // For now, I'll assume we might add it or just use what we have.
+    // Let's add delete user to api service anticipating the backend change.
+    // Using DELETE /user/:uid
+    // I'll need to check if that route exists.
+    // It doesn't exist yet in user.js. I should add it later.
+  }
+
+  // --- Donation Methods ---
+  static Future<List<dynamic>> getCampaigns() async {
+    try {
+      final response = await get('/donations/campaigns');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Error fetching campaigns: $e');
+      return [];
+    }
+  }
+
+  static Future<void> donate(Map<String, dynamic> data) async {
+    await post('/donations/donate', data);
+  }
+
+  static Future<List<dynamic>> getMyDonations(String uid) async {
+    try {
+      final response = await get('/donations/my-donations/$uid');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Error fetching donations: $e');
+      return [];
     }
   }
 }

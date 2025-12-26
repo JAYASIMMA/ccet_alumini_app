@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../services/auth_service.dart';
-import 'user_details_screen.dart';
+import 'secondary/edit_profile_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -39,8 +39,7 @@ class _SignupScreenState extends State<SignupScreen> {
         if (user != null) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) =>
-                  UserDetailsScreen(uid: user.uid, email: user.email),
+              builder: (context) => const EditProfileScreen(isOnboarding: true),
             ),
           );
         }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:ccet_alumini_app/services/auth_service.dart';
+import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
 
 void main() {
@@ -74,7 +76,20 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const WelcomeScreen(),
+      home: FutureBuilder(
+        future: AuthService().tryAutoLogin(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (snapshot.data == true) {
+            return const HomeScreen();
+          }
+          return const WelcomeScreen();
+        },
+      ),
     );
   }
 }

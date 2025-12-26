@@ -35,6 +35,8 @@ class UserModel {
   final String? permPincode;
 
   final String? linkedInId;
+  final bool isAdmin;
+  final bool isAlumni;
 
   UserModel({
     required this.uid,
@@ -62,6 +64,8 @@ class UserModel {
     this.permDistrict,
     this.permPincode,
     this.linkedInId,
+    this.isAdmin = false,
+    this.isAlumni = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -91,6 +95,8 @@ class UserModel {
       'permDistrict': permDistrict,
       'permPincode': permPincode,
       'linkedInId': linkedInId,
+      'isAdmin': isAdmin,
+      'isAlumni': isAlumni,
     };
   }
 
@@ -124,6 +130,8 @@ class UserModel {
       permDistrict: map['permDistrict'],
       permPincode: map['permPincode'],
       linkedInId: map['linkedInId'],
+      isAdmin: map['isAdmin'] ?? false,
+      isAlumni: map['isAlumni'] ?? false,
     );
   }
 }

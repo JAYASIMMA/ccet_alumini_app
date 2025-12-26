@@ -22,44 +22,26 @@ class NewsScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 120,
-                  width: double.infinity,
-                  color: Colors.blueAccent.withOpacity(0.2),
-                  child: const Center(child: Icon(Icons.newspaper, size: 40)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AutoSizeText(
-                        'University News Hedaer ${index + 1}',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                      ),
-                      const SizedBox(height: 8),
-                      const AutoSizeText(
-                        'CCET achieves another milestone in academic excellence. Read more about the recent accomplishments...',
-                        maxLines: 3,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.newspaper, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'No News Yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
             ),
-          );
-        },
+            Text(
+              'Stay tuned for updates!',
+              style: TextStyle(color: Colors.grey.shade500),
+            ),
+          ],
+        ),
       ),
     );
   }
