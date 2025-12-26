@@ -27,22 +27,23 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true);
 
-    final userCredential = await _authService.signUpWithEmailAndPassword(
+    final success = await _authService.signUpWithEmailAndPassword(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (userCredential != null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => UserDetailsScreen(
-              uid: userCredential.user!.uid,
-              email: userCredential.user!.email!,
+      if (success) {
+        final user = _authService.currentUser;
+        if (user != null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) =>
+                  UserDetailsScreen(uid: user.uid, email: user.email),
             ),
-          ),
-        );
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign up failed. Please try again.')),

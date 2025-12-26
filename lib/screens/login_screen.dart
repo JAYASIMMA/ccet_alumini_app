@@ -28,31 +28,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final userCredential = await _authService.signInWithEmailAndPassword(
+    final success = await _authService.signInWithEmailAndPassword(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
 
     if (mounted) {
       setState(() => _isLoading = false);
-      if (userCredential != null) {
-        final isRegistered = await _authService.isUserRegistered(
-          userCredential.user!.uid,
-        );
-        if (mounted) {
-          if (isRegistered) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-            );
-          } else {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => UserDetailsScreen(
-                  uid: userCredential.user!.uid,
-                  email: userCredential.user!.email!,
+      if (success) {
+        final user = _authService.currentUser;
+        if (user != null) {
+          final isRegistered = await _authService.isUserRegistered(user.uid);
+          if (mounted) {
+            if (isRegistered) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) =>
+                      UserDetailsScreen(uid: user.uid, email: user.email),
                 ),
-              ),
-            );
+              );
+            }
           }
         }
       } else {

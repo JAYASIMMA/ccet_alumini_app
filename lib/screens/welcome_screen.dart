@@ -115,7 +115,7 @@ class WelcomeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(30),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.2),
@@ -146,7 +146,7 @@ class WelcomeScreen extends StatelessWidget {
                           'Join our vibrant community of alumni students and stay connected with your alma mater.',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 height: 1.5,
                               ),
                           textAlign: TextAlign.center,

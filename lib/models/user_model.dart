@@ -11,6 +11,10 @@ class UserModel {
   final String phoneNumber;
   final String countryCode;
 
+  // Getters for compatibility
+  String get displayName => '$firstName $lastName';
+  String? get photoURL => profileImageUrl;
+
   // Residential Address
   final String resAddressLine1;
   final String? resAddressLine2;

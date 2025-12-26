@@ -1,123 +1,115 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../models/user_model.dart';
+import 'api_service.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // Current user cache
+  static UserModel? _currentUser;
 
-  // Stream of auth state changes
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  // Stream of auth state changes (simple simplified version)
+  final StreamController<UserModel?> _authStateController =
+      StreamController<UserModel?>.broadcast();
+  Stream<UserModel?> get authStateChanges => _authStateController.stream;
 
-  // Current user
-  User? get currentUser => _auth.currentUser;
+  UserModel? get currentUser => _currentUser;
 
-  // Sign in with Google
-  Future<UserCredential?> signInWithGoogle() async {
-    try {
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-
-      if (googleUser == null) {
-        // The user canceled the sign-in
-        return null;
-      }
-
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Create a new credential
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // Once signed in, return the UserCredential
-      return await _auth.signInWithCredential(credential);
-    } catch (e) {
-      print('Error during Google Sign-In: $e');
-      return null;
-    }
+  // Sign in with Google (Not implemented in backend yet, keeping mock or TODO)
+  Future<bool> signInWithGoogle() async {
+    // TODO: Implement Google Auth with backend
+    return false;
   }
 
   // Sign up with email and password
-  Future<UserCredential?> signUpWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
+  Future<bool> signUpWithEmailAndPassword(String email, String password) async {
     try {
-      return await _auth.createUserWithEmailAndPassword(
+      // In this flow, we just validated inputs locally or check if user exists.
+      // But creating a user requires full profile.
+      // We will store the password temporarily to use it when saving full profile.
+      _tempPassword = password;
+
+      _currentUser = UserModel(
+        uid: 'temp_${DateTime.now().millisecondsSinceEpoch}',
         email: email,
-        password: password,
+        firstName: '',
+        lastName: '',
+        department: '',
+        rollNumber: '',
+        phoneNumber: '',
+        resAddressLine1: '',
+        resDistrict: '',
+        resPincode: '',
       );
+      return true;
     } catch (e) {
-      print('Error during Email Sign-Up: $e');
-      return null;
+      print('Signup error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      final response = await ApiService.post('/auth/login', {
+        'email': email,
+        'password': password,
+      });
+
+      if (response['success'] == true) {
+        _currentUser = UserModel.fromMap(response['user']);
+        _authStateController.add(_currentUser);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Login error: $e');
+      return false;
     }
   }
 
   Future<void> saveUserDetails(UserModel userModel) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userModel.uid)
-          .set(userModel.toMap());
+      final data = userModel.toMap();
+
+      if (_tempPassword != null) {
+        data['password'] = _tempPassword;
+        await ApiService.post('/auth/register', data);
+        _tempPassword = null; // Clear it
+      } else {
+        // Update existing
+        await ApiService.put('/user/${userModel.uid}', data);
+      }
+
+      _currentUser = userModel;
+      _authStateController.add(_currentUser);
     } catch (e) {
-      print('Error saving user details: $e');
+      print('Save details error: $e');
       rethrow;
     }
   }
 
+  String? _tempPassword;
+
   Future<bool> isUserRegistered(String uid) async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-      return doc.exists;
+      if (uid.startsWith('temp_')) return false;
+      final exists = await ApiService.get('/auth/check/$uid');
+      return exists == true;
     } catch (e) {
-      print('Error checking registration: $e');
       return false;
     }
   }
 
   Future<UserModel?> getUserDetails(String uid) async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(uid)
-          .get();
-      if (doc.exists) {
-        return UserModel.fromMap(doc.data() as Map<String, dynamic>);
-      }
-      return null;
+      final data = await ApiService.get('/user/$uid');
+      return UserModel.fromMap(data);
     } catch (e) {
-      print('Error fetching user details: $e');
-      return null;
-    }
-  }
-
-  // Sign in with email and password
-  Future<UserCredential?> signInWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
-    try {
-      return await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } catch (e) {
-      print('Error during Email Sign-In: $e');
       return null;
     }
   }
 
   // Sign out
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    _currentUser = null;
+    _authStateController.add(null);
   }
 }

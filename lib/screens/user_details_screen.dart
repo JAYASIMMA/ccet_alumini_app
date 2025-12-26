@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -136,12 +137,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
   Future<String?> _uploadImage(String uid) async {
     if (_imageFile == null) return null;
     try {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('user_profiles')
-          .child('$uid.jpg');
-      await ref.putFile(_imageFile!);
-      return await ref.getDownloadURL();
+      return await ApiService.uploadImage(_imageFile!);
     } catch (e) {
       print('Error uploading image: $e');
       return null;
