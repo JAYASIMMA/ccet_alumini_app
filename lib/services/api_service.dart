@@ -271,11 +271,22 @@ class ApiService {
     }
   }
 
-    // For now, I'll assume we might add it or just use what we have.
-    // Let's add delete user to api service anticipating the backend change.
-    // Using DELETE /user/:uid
-    // I'll need to check if that route exists.
-    // It doesn't exist yet in user.js. I should add it later.
+  static Future<void> deleteUser(String uid) async {
+    // Note: Backend route for deleting user needs implementation.
+    // For now, this is a placeholder or uses a simplified route if available.
+    // Assuming DELETE /user/:uid might be added later.
+  }
+
+  static Future<void> deleteProfileImage(String uid) async {
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/user/$uid/image'));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete profile image');
+      }
+    } catch (e) {
+      print('Error deleting profile image: $e');
+      rethrow;
+    }
   }
 
   // --- Donation Methods ---
