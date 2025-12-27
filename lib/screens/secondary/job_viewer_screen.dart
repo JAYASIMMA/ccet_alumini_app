@@ -6,6 +6,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class JobViewerScreen extends StatefulWidget {
   final Map<String, dynamic> job;
@@ -160,9 +161,39 @@ class _JobViewerScreenState extends State<JobViewerScreen> {
                           "Application Link:",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Text(
-                          job['link'],
-                          style: const TextStyle(color: Colors.blue),
+                        InkWell(
+                          onTap: () async {
+                            String urlString = job['link'];
+                            if (!urlString.startsWith('http')) {
+                              urlString = 'https://$urlString';
+                            }
+                            final Uri url = Uri.parse(urlString);
+                            try {
+                              if (!await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              )) {
+                                throw Exception('Could not launch $url');
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Could not open link: $urlString',
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(
+                            job['link'],
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 16),
                       ],

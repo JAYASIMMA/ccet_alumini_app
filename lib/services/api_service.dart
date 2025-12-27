@@ -13,11 +13,22 @@ class ApiService {
 
   static String? fixImageUrl(String? url) {
     if (url == null) return null;
+    final baseUri = Uri.parse(baseUrl);
     if (url.startsWith('/')) {
-      return 'http://192.168.1.33:3000$url';
+      return '${baseUri.scheme}://${baseUri.host}:${baseUri.port}$url';
     }
     if (url.contains('localhost')) {
-      return url.replaceFirst('localhost', '192.168.1.33');
+      return url.replaceFirst('localhost', baseUri.host);
+    }
+    if (url.contains('192.168.') && !url.contains(baseUri.host)) {
+      // Replace old IP with new IP if we switched networks
+      // This handles the case where DB has old IP saved
+      // This handles the case where DB has old IP saved
+
+      // Logic to replace just the host part is trickier with simple string replace
+      // if ports are same.
+      // Easiest is to regex replace the IP.
+      return url.replaceAll(RegExp(r'192\.168\.\d+\.\d+'), baseUri.host);
     }
     return url;
   }
