@@ -7,6 +7,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:quickalert/quickalert.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -17,6 +18,10 @@ class NewsScreen extends StatefulWidget {
 
 class _NewsScreenState extends State<NewsScreen> {
   late Future<List<dynamic>> _newsFuture;
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -45,7 +50,22 @@ class _NewsScreenState extends State<NewsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const AutoSizeText('News & Updates', maxLines: 1),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search news...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+              )
+            : const AutoSizeText('News & Updates', maxLines: 1),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -58,6 +78,51 @@ class _NewsScreenState extends State<NewsScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.calendar_today,
+              color: _selectedDate != null ? Colors.yellow : Colors.white,
+            ),
+            onPressed: () async {
+              final pickedDate = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
+              if (pickedDate != null && pickedDate != _selectedDate) {
+                setState(() {
+                  _selectedDate = pickedDate;
+                });
+              }
+            },
+          ),
+          if (_selectedDate != null)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _selectedDate = null;
+                });
+              },
+              tooltip: 'Clear Date Filter',
+            ),
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchQuery = '';
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _newsFuture,
@@ -70,7 +135,37 @@ class _NewsScreenState extends State<NewsScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final newsList = snapshot.data ?? [];
+          final allNews = snapshot.data ?? [];
+
+          final newsList = allNews.where((news) {
+            final title = (news['title'] ?? '').toString().toLowerCase();
+            final content = (news['content'] ?? '').toString().toLowerCase();
+            final department = (news['department'] ?? '')
+                .toString()
+                .toLowerCase();
+
+            bool matchesSearch =
+                title.contains(_searchQuery) ||
+                content.contains(_searchQuery) ||
+                department.contains(_searchQuery);
+
+            bool matchesDate = true;
+            if (_selectedDate != null) {
+              // Priority to 'date' field (News Date), fallback to maybe match Logic if needed.
+              // Schema has 'date' field.
+              if (news['date'] != null) {
+                final newsDate = DateTime.parse(news['date']);
+                matchesDate =
+                    newsDate.year == _selectedDate!.year &&
+                    newsDate.month == _selectedDate!.month &&
+                    newsDate.day == _selectedDate!.day;
+              } else {
+                matchesDate = false;
+              }
+            }
+
+            return matchesSearch && matchesDate;
+          }).toList();
 
           if (newsList.isEmpty) {
             return Center(
@@ -289,6 +384,23 @@ class _NewsScreenState extends State<NewsScreen> {
                                             fontSize: 12,
                                           ),
                                         ),
+                                        // "Posted ago" logic
+                                        if (news['date'] != null)
+                                          Text(
+                                            ' • ${timeago.format(DateTime.parse(news['date']))}',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade500,
+                                              fontSize: 12,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
                                         if (news['author'] != null)
                                           Row(
                                             children: [

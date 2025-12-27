@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:quickalert/quickalert.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class EventsTab extends StatefulWidget {
   const EventsTab({super.key});
@@ -20,6 +21,10 @@ class EventsTab extends StatefulWidget {
 
 class _EventsTabState extends State<EventsTab> {
   late Future<List<dynamic>> _eventsFuture;
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -36,6 +41,81 @@ class _EventsTabState extends State<EventsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search events...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+              )
+            : const Text('Events'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).colorScheme.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.calendar_today,
+              color: _selectedDate != null ? Colors.yellow : Colors.white,
+            ),
+            onPressed: () async {
+              final pickedDate = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030), // Allow future dates for events
+              );
+              if (pickedDate != null && pickedDate != _selectedDate) {
+                setState(() {
+                  _selectedDate = pickedDate;
+                });
+              }
+            },
+          ),
+          if (_selectedDate != null)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _selectedDate = null;
+                });
+              },
+              tooltip: 'Clear Date Filter',
+            ),
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchQuery = '';
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: _eventsFuture,
         builder: (context, snapshot) {
@@ -47,7 +127,33 @@ class _EventsTabState extends State<EventsTab> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final events = snapshot.data ?? [];
+          final allEvents = snapshot.data ?? [];
+
+          final events = allEvents.where((event) {
+            final title = (event['title'] ?? '').toString().toLowerCase();
+            final location = (event['location'] ?? '').toString().toLowerCase();
+            final desc = (event['description'] ?? '').toString().toLowerCase();
+
+            bool matchesSearch =
+                title.contains(_searchQuery) ||
+                location.contains(_searchQuery) ||
+                desc.contains(_searchQuery);
+
+            bool matchesDate = true;
+            if (_selectedDate != null) {
+              if (event['date'] != null) {
+                final eventDate = DateTime.parse(event['date']);
+                matchesDate =
+                    eventDate.year == _selectedDate!.year &&
+                    eventDate.month == _selectedDate!.month &&
+                    eventDate.day == _selectedDate!.day;
+              } else {
+                matchesDate = false;
+              }
+            }
+
+            return matchesSearch && matchesDate;
+          }).toList();
 
           if (events.isEmpty) {
             return const Center(
@@ -185,24 +291,42 @@ class _EventsTabState extends State<EventsTab> {
                                     ),
                                     const SizedBox(height: 2),
                                     Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Icon(
-                                          Icons.location_on,
-                                          size: 14,
-                                          color: Colors.grey,
-                                        ),
-                                        const SizedBox(width: 4),
                                         Expanded(
-                                          child: AutoSizeText(
-                                            event['location'],
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                            minFontSize: 10,
+                                          child: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.location_on,
+                                                size: 14,
+                                                color: Colors.grey,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: AutoSizeText(
+                                                  event['location'],
+                                                  style: const TextStyle(
+                                                    color: Colors.grey,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  minFontSize: 10,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
+                                        if (event['createdAt'] != null)
+                                          Text(
+                                            'Posted ${timeago.format(DateTime.parse(event['createdAt']))}',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade500,
+                                              fontSize: 10,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ],

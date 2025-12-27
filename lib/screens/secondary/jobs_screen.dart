@@ -9,6 +9,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:quickalert/quickalert.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
@@ -19,6 +20,10 @@ class JobsScreen extends StatefulWidget {
 
 class _JobsScreenState extends State<JobsScreen> {
   late Future<List<dynamic>> _jobsFuture;
+  bool _isSearching = false;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -36,7 +41,22 @@ class _JobsScreenState extends State<JobsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Jobs & Careers'),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search jobs...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+              )
+            : const Text('Jobs & Careers'),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -49,6 +69,53 @@ class _JobsScreenState extends State<JobsScreen> {
             ),
           ),
         ),
+        actions: [
+          // Date Picker Action
+          IconButton(
+            icon: Icon(
+              Icons.calendar_today,
+              color: _selectedDate != null ? Colors.yellow : Colors.white,
+            ),
+            onPressed: () async {
+              final pickedDate = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
+              if (pickedDate != null && pickedDate != _selectedDate) {
+                setState(() {
+                  _selectedDate = pickedDate;
+                });
+              }
+            },
+          ),
+          if (_selectedDate != null)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.white), // Clear Icon
+              onPressed: () {
+                setState(() {
+                  _selectedDate = null;
+                });
+              },
+              tooltip: 'Clear Date Filter',
+            ),
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  // Clear search when closing
+                  _isSearching = false;
+                  _searchQuery = '';
+                  _searchController.clear();
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _jobsFuture,
@@ -61,7 +128,30 @@ class _JobsScreenState extends State<JobsScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final jobs = snapshot.data ?? [];
+          final allJobs = snapshot.data ?? [];
+
+          final jobs = allJobs.where((job) {
+            final title = (job['title'] ?? '').toString().toLowerCase();
+            final company = (job['company'] ?? '').toString().toLowerCase();
+
+            bool matchesSearch =
+                title.contains(_searchQuery) || company.contains(_searchQuery);
+
+            bool matchesDate = true;
+            if (_selectedDate != null) {
+              if (job['createdAt'] != null) {
+                final jobDate = DateTime.parse(job['createdAt']);
+                matchesDate =
+                    jobDate.year == _selectedDate!.year &&
+                    jobDate.month == _selectedDate!.month &&
+                    jobDate.day == _selectedDate!.day;
+              } else {
+                matchesDate = false;
+              }
+            }
+
+            return matchesSearch && matchesDate;
+          }).toList();
 
           if (jobs.isEmpty) {
             return const Center(
@@ -160,6 +250,27 @@ class _JobsScreenState extends State<JobsScreen> {
                                     ),
                                   ],
                                 ),
+                                if (job['createdAt'] != null) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 14,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Posted ${timeago.format(DateTime.parse(job['createdAt']))}',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade500,
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ],
                             ),
                             trailing: Row(
