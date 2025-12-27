@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import '../../services/auth_service.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key});
@@ -43,6 +44,20 @@ class NewsScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: (AuthService().currentUser?.role != 'student')
+          ? FloatingActionButton(
+              onPressed: () {
+                // TODO: Navigate to News Creation Screen or show Dialog
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Add News Feature Coming Soon!'),
+                  ),
+                );
+              },
+              backgroundColor: Theme.of(context).primaryColor,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
   }
 }

@@ -178,9 +178,13 @@ class _JobsScreenState extends State<JobsScreen> {
           );
         },
       ),
-      floatingActionButton: (AuthService().currentUser?.isAdmin == true)
+      floatingActionButton: (AuthService().currentUser?.role != 'student')
           ? FloatingActionButton(
               onPressed: () async {
+                // Check if user is Admin to use the specialized AddJobScreen,
+                // OR we allow everyone to use it?
+                // For now, let's open AddJobScreen for everyone allowed (or restricted version)
+                // The current AddJobScreen might be admin-focused, but user requested feature for all.
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AddJobScreen()),
