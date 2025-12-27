@@ -203,8 +203,25 @@ class _FeedTabState extends State<FeedTab> {
                             () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    Scaffold(body: ProfileTab()),
+                                builder: (context) => Scaffold(
+                                  appBar: AppBar(
+                                    title: const Text("My Profile"),
+                                    centerTitle: true,
+                                    flexibleSpace: Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.blue,
+                                            Colors.deepPurple,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  body: const ProfileTab(),
+                                ),
                               ),
                             ),
                           ),
@@ -217,8 +234,25 @@ class _FeedTabState extends State<FeedTab> {
                             () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    Scaffold(appBar: null, body: EventsTab()),
+                                builder: (context) => Scaffold(
+                                  appBar: AppBar(
+                                    title: const Text("Events"),
+                                    centerTitle: true,
+                                    flexibleSpace: Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.blue,
+                                            Colors.deepPurple,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  body: const EventsTab(),
+                                ),
                               ),
                             ),
                           ),
