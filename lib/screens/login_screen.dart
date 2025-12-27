@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                colors: [Color(0xFF2575FC), Color(0xFF00C6FF)],
               ),
             ),
           ),
@@ -217,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6A11CB),
+                              backgroundColor: const Color(0xFF2575FC),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),

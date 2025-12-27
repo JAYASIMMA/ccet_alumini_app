@@ -199,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.purple.shade100,
+                              backgroundColor: Colors.blue.shade100,
                               child: Text(name[0].toUpperCase()),
                             ),
                             title: Text(name),

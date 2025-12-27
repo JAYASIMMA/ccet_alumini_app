@@ -28,11 +28,11 @@ class MyApp extends StatelessWidget {
     final lightTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      primaryColor: const Color(0xFF6A11CB), // Deep Purple
+      primaryColor: const Color(0xFF2575FC), // Blue
       scaffoldBackgroundColor: const Color(0xFFF5F7FA), // Light Grey/White
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF6A11CB),
-        secondary: const Color(0xFF2575FC), // Blue Accent
+        seedColor: const Color(0xFF2575FC),
+        secondary: const Color(0xFF00C6FF), // Light Blue Accent
         surface: Colors.white,
         brightness: Brightness.light,
       ),
@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF6A11CB),
+          backgroundColor: const Color(0xFF2575FC),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF6A11CB), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF2575FC), width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -89,10 +89,10 @@ class MyApp extends StatelessWidget {
     final darkTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      primaryColor: const Color(0xFF6A11CB),
+      primaryColor: const Color(0xFF2575FC),
       scaffoldBackgroundColor: const Color(0xFF121212),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF6A11CB),
+        seedColor: const Color(0xFF2575FC),
         brightness: Brightness.dark,
         surface: const Color(0xFF1E1E1E),
       ),
@@ -109,7 +109,7 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF6A11CB),
+          backgroundColor: const Color(0xFF2575FC),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -137,7 +137,7 @@ class MyApp extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF6A11CB), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF2575FC), width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,

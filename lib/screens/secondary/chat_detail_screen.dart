@@ -74,7 +74,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+              colors: [Color(0xFF2575FC), Color(0xFF00C6FF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -109,7 +109,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: isMe
-                          ? const Color(0xFF6A11CB)
+                          ? const Color(0xFF2575FC)
                           : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(20).copyWith(
                         bottomRight: isMe
@@ -174,7 +174,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 ),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: const Color(0xFF6A11CB),
+                  backgroundColor: const Color(0xFF2575FC),
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white, size: 20),
                     onPressed: _sendMessage,

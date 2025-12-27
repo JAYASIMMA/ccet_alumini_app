@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                colors: [Color(0xFF2575FC), Color(0xFF00C6FF)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 40.0,
-                                color: Color(0xFF6A11CB),
+                                color: Color(0xFF2575FC),
                                 fontWeight: FontWeight.bold,
                               ),
                             )
@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                    colors: [Color(0xFF2575FC), Color(0xFF00C6FF)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ListTile(
                         leading: const Icon(
                           Icons.newspaper,
-                          color: Color(0xFF6A11CB),
+                          color: Color(0xFF2575FC),
                         ),
                         title: const Text('News & Updates'),
                         onTap: () => _navigateTo(const NewsScreen()),
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ListTile(
                         leading: const Icon(
                           Icons.business_center,
-                          color: Color(0xFF6A11CB),
+                          color: Color(0xFF2575FC),
                         ),
                         title: const Text('Jobs & Careers'),
                         onTap: () => _navigateTo(const JobsScreen()),
@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ListTile(
                         leading: const Icon(
                           Icons.volunteer_activism,
-                          color: Color(0xFF6A11CB),
+                          color: Color(0xFF2575FC),
                         ),
                         title: const Text('Donations'),
                         onTap: () => _navigateTo(const DonationScreen()),
@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           leading: const Icon(
                             Icons.admin_panel_settings,
-                            color: Color(0xFF6A11CB),
+                            color: Color(0xFF2575FC),
                           ),
                           title: const Text('Manage Users'),
                           onTap: () =>
@@ -188,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ListTile(
                           leading: const Icon(
                             Icons.people_alt,
-                            color: Color(0xFF6A11CB),
+                            color: Color(0xFF2575FC),
                           ),
                           title: const Text('Department Users'),
                           onTap: () {
@@ -268,29 +268,29 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor:
               Theme.of(context).bottomAppBarTheme.color ??
               Theme.of(context).cardColor,
-          indicatorColor: const Color(0xFF6A11CB).withOpacity(0.2),
+          indicatorColor: const Color(0xFF2575FC).withOpacity(0.2),
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: Color(0xFF6A11CB)),
+              selectedIcon: Icon(Icons.home, color: Color(0xFF2575FC)),
               label: 'Home',
             ),
             NavigationDestination(
               icon: Icon(Icons.calendar_today_outlined),
               selectedIcon: Icon(
                 Icons.calendar_today,
-                color: Color(0xFF6A11CB),
+                color: Color(0xFF2575FC),
               ),
               label: 'Events',
             ),
             NavigationDestination(
               icon: Icon(Icons.people_outline),
-              selectedIcon: Icon(Icons.people, color: Color(0xFF6A11CB)),
+              selectedIcon: Icon(Icons.people, color: Color(0xFF2575FC)),
               label: 'Directory',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: Color(0xFF6A11CB)),
+              selectedIcon: Icon(Icons.person, color: Color(0xFF2575FC)),
               label: 'Profile',
             ),
           ],
