@@ -55,7 +55,7 @@ class _FeedTabState extends State<FeedTab> {
                     children: [
                       CarouselSlider(
                         options: CarouselOptions(
-                          height: 200.0,
+                          height: 250.0,
                           autoPlay: true,
                           enlargeCenterPage: true,
                           aspectRatio: 16 / 9,
