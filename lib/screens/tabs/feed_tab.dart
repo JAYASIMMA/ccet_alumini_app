@@ -64,8 +64,8 @@ class _FeedTabState extends State<FeedTab> {
                           autoPlayAnimationDuration: const Duration(
                             milliseconds: 800,
                           ),
-                          viewportFraction: 0.85,
-                          enlargeFactor: 0.3,
+                          viewportFraction: 0.9,
+                          enlargeFactor: 0.15,
                           onPageChanged: (index, reason) {
                             setState(() {
                               _current = index;
