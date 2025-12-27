@@ -24,7 +24,8 @@ class RoleSelectionScreen extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => const EditProfileScreen(
                       isOnboarding: true,
-                    ), // Pass relevant params
+                      selectedRole: 'student',
+                    ),
                   ),
                 );
               },
@@ -38,7 +39,8 @@ class RoleSelectionScreen extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => const EditProfileScreen(
                       isOnboarding: true,
-                    ), // Pass relevant params
+                      selectedRole: 'alumni',
+                    ),
                   ),
                 );
               },

@@ -57,6 +57,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _placedIn; // On Campus/Off Campus
   bool _isPermanentSameAsResidential = false;
   DateTime? _dateOfBirth;
+  String? _selectedCurrentYear;
 
   final List<String> _departments = [
     'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', // Add actual departments
@@ -139,6 +140,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _dateOfBirth = user?.dateOfBirth;
 
     // Special handling: Department in user model is String.
+    _selectedCurrentYear = user?.currentYear;
   }
 
   @override
@@ -283,7 +285,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         isAdmin: _currentUser!.isAdmin,
         isAlumni: isAlumni,
         role: widget.selectedRole ?? _currentUser?.role ?? 'alumni',
-        currentYear: _currentUser?.currentYear,
+        currentYear: _selectedCurrentYear,
         semester: _currentUser?.semester,
       );
 
@@ -343,7 +345,106 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. Profile Image (Center)
+                    // --- BASIC INFORMATION SECTION ---
+                    _buildSectionHeader('Basic Information'),
+
+                    // 1. Department
+                    DropdownButtonFormField<String>(
+                      decoration: _inputDecoration('Select your Department'),
+                      value: _selectedDepartment,
+                      items: _departments
+                          .map(
+                            (d) => DropdownMenuItem(value: d, child: Text(d)),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedDepartment = val),
+                      validator: (val) => val == null ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 2. Roll Number
+                    _buildTextField(
+                      'Roll Number',
+                      _rollNumberController,
+                      required: true,
+                    ),
+
+                    // 3. Year of Studying (Student) OR Completed Year (Alumni)
+                    if (widget.selectedRole == 'student' ||
+                        (_currentUser?.role == 'student'))
+                      DropdownButtonFormField<String>(
+                        decoration: _inputDecoration('Year of Studying'),
+                        value: _selectedCurrentYear,
+                        items: ['1st Year', '2nd Year', '3rd Year', '4th Year']
+                            .map(
+                              (y) => DropdownMenuItem(value: y, child: Text(y)),
+                            )
+                            .toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedCurrentYear = val;
+                          });
+                        },
+                        validator: (val) => val == null ? 'Required' : null,
+                      )
+                    else
+                      _buildTextField(
+                        'Completed Year',
+                        _completedYearController,
+                        keyboardType: TextInputType.number,
+                        required: true, // Alumni must have a completed year
+                      ),
+
+                    if (widget.selectedRole == 'student' ||
+                        (_currentUser?.role == 'student'))
+                      const SizedBox(height: 16),
+
+                    // 4. Date of Birth
+                    GestureDetector(
+                      onTap: () => _selectDate(context),
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          decoration: _inputDecoration('Date of Birth')
+                              .copyWith(
+                                suffixIcon: const Icon(Icons.calendar_today),
+                              ),
+                          controller: TextEditingController(
+                            text: _dateOfBirth != null
+                                ? DateFormat('dd-MM-yyyy').format(_dateOfBirth!)
+                                : '',
+                          ),
+                          validator: (val) =>
+                              val == null || val.isEmpty ? 'Required' : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 5. Blood Group
+                    DropdownButtonFormField<String>(
+                      decoration: _inputDecoration('Blood Group'),
+                      value: _selectedBloodGroup,
+                      items: _bloodGroups
+                          .map(
+                            (bg) =>
+                                DropdownMenuItem(value: bg, child: Text(bg)),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedBloodGroup = val),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // --- ROLE SPECIFIC INFORMATION SECTION ---
+                    _buildSectionHeader(
+                      (widget.selectedRole == 'student' ||
+                              _currentUser?.role == 'student')
+                          ? 'Student Information'
+                          : 'Alumni Information',
+                    ),
+
+                    // 1. Profile Image (Required)
                     Center(
                       child: Stack(
                         children: [
@@ -354,7 +455,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               );
                               final hasValidUrl =
                                   fixedUrl != null && fixedUrl.isNotEmpty;
-                              // Prioritize selected file, then network image
                               final ImageProvider? imageProvider =
                                   _imageFile != null
                                   ? FileImage(_imageFile!)
@@ -398,7 +498,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ],
                       ),
                     ),
-                    if (_currentUser?.photoURL != null || _imageFile != null)
+                    if (_currentUser?.profileImageUrl != null ||
+                        _imageFile !=
+                            null) // Changed from photoURL to profileImageUrl
                       Center(
                         child: TextButton(
                           onPressed: _deleteImage,
@@ -410,7 +512,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     const SizedBox(height: 20),
 
-                    _buildSectionHeader('Basic Information'),
+                    // 2. First Name (Req) & Last Name
                     Row(
                       children: [
                         Expanded(
@@ -429,80 +531,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ],
                     ),
-                    DropdownButtonFormField<String>(
-                      decoration: _inputDecoration('Department'),
-                      value: _selectedDepartment,
-                      items: _departments
-                          .map(
-                            (d) => DropdownMenuItem(value: d, child: Text(d)),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedDepartment = val),
-                      validator: (val) => val == null ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField('Roll Number', _rollNumberController),
-                    if (widget.selectedRole == 'student' ||
-                        (_currentUser?.role == 'student')) ...[
-                      // Student Specific Fields
-                      DropdownButtonFormField<String>(
-                        decoration: _inputDecoration('Current Year'),
-                        value: _currentUser
-                            ?.currentYear, // You might need a controller/variable for this if new
-                        items: ['1st Year', '2nd Year', '3rd Year', '4th Year']
-                            .map(
-                              (y) => DropdownMenuItem(value: y, child: Text(y)),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          // Handle change (add to state/controller)
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Hide Completed Year, or make it "Expected Graduation"
-                    ] else ...[
-                      // Alumni Specific Fields (keep existing)
-                      _buildTextField(
-                        'Completed Year',
-                        _completedYearController,
-                        keyboardType: TextInputType.number,
-                      ),
-                    ],
 
-                    GestureDetector(
-                      onTap: () => _selectDate(context),
-                      child: AbsorbPointer(
-                        child: TextFormField(
-                          decoration: _inputDecoration('Date of Birth')
-                              .copyWith(
-                                suffixIcon: const Icon(Icons.calendar_today),
-                              ),
-                          controller: TextEditingController(
-                            text: _dateOfBirth != null
-                                ? DateFormat('dd-MM-yyyy').format(_dateOfBirth!)
-                                : '',
-                          ),
-                          validator: (val) =>
-                              val == null || val.isEmpty ? 'Required' : null,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      decoration: _inputDecoration('Blood Group'),
-                      value: _selectedBloodGroup,
-                      items: _bloodGroups
-                          .map(
-                            (bg) =>
-                                DropdownMenuItem(value: bg, child: Text(bg)),
-                          )
-                          .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedBloodGroup = val),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSectionHeader('Contact Information'),
+                    // 3. Phone Number (10 digit, required, with country code)
                     Row(
                       children: [
                         SizedBox(
@@ -524,22 +554,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         const SizedBox(width: 16),
                         Expanded(
-                          child: _buildTextField(
-                            'Phone Number *',
-                            _phoneNumberController,
+                          child: TextFormField(
+                            controller: _phoneNumberController,
+                            decoration: _inputDecoration('Phone Number *'),
                             keyboardType: TextInputType.phone,
-                            required: true,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) return 'Required';
+                              if (val.length != 10) return 'Must be 10 digits';
+                              return null;
+                            },
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildTextField('LinkedIn ID', _linkedInIdController),
-                    const SizedBox(height: 16),
 
-                    _buildSectionHeader('Residential Address'),
+                    // 4. Residential Address
+                    Text(
+                      'Residential Address',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     _buildTextField(
-                      'Address Line 1 *',
+                      'Address Line 1',
                       _resAddressLine1Controller,
                       required: true,
                     ),
@@ -551,7 +592,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       children: [
                         Expanded(
                           child: _buildTextField(
-                            'District *',
+                            'District',
                             _resDistrictController,
                             required: true,
                           ),
@@ -559,7 +600,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _buildTextField(
-                            'Pincode *',
+                            'Pincode',
                             _resPincodeController,
                             required: true,
                             keyboardType: TextInputType.number,
@@ -568,6 +609,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
+                    // ALUMNI SPECIFIC EXTRA FIELDS (Placed, etc)
+                    if (widget.selectedRole == 'alumni' ||
+                        (_currentUser?.role == 'alumni')) ...[
+                      DropdownButtonFormField<String>(
+                        decoration: _inputDecoration('Placed?'),
+                        value: _isPlaced ? 'Yes' : 'No',
+                        items: ['Yes', 'No']
+                            .map(
+                              (v) => DropdownMenuItem(value: v, child: Text(v)),
+                            )
+                            .toList(),
+                        onChanged: (val) => setState(() {
+                          _isPlaced = val == 'Yes';
+                          if (!_isPlaced) _placedIn = null;
+                        }),
+                      ),
+                      const SizedBox(height: 16),
+                      if (_isPlaced)
+                        DropdownButtonFormField<String>(
+                          decoration: _inputDecoration('Placed In'),
+                          value: _placedIn,
+                          items: _placedInOptions
+                              .map(
+                                (v) =>
+                                    DropdownMenuItem(value: v, child: Text(v)),
+                              )
+                              .toList(),
+                          onChanged: (val) => setState(() => _placedIn = val),
+                        ),
+                      if (_isPlaced) const SizedBox(height: 16),
+
+                      _buildTextField(
+                        'Designation/Course',
+                        _designationController,
+                      ),
+                      _buildTextField(
+                        'Name of Company',
+                        _companyNameController,
+                      ),
+                    ],
+
+                    // 9. Permanent Address
                     Row(
                       children: [
                         Checkbox(
@@ -576,11 +660,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             () => _isPermanentSameAsResidential = val ?? false,
                           ),
                         ),
-                        const Text('Permanent Address same as Residential'),
+                        const Expanded(
+                          child: Text(
+                            'Permanent Address same as Residential',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                     if (!_isPermanentSameAsResidential) ...[
-                      _buildSectionHeader('Permanent Address'),
+                      Text(
+                        'Permanent Address',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       _buildTextField(
                         'Address Line 1',
                         _permAddressLine1Controller,
@@ -609,44 +706,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ],
 
-                    if (widget.selectedRole == 'alumni' ||
-                        (_currentUser?.role == 'alumni')) ...[
-                      _buildSectionHeader('Placement & Career'),
-                      // ... (Placement fields)
-                      DropdownButtonFormField<String>(
-                        decoration: _inputDecoration('Placed?'),
-                        value: _isPlaced ? 'Yes' : 'No',
-                        items: ['Yes', 'No']
-                            .map(
-                              (v) => DropdownMenuItem(value: v, child: Text(v)),
-                            )
-                            .toList(),
-                        onChanged: (val) => setState(() {
-                          _isPlaced = val == 'Yes';
-                          if (!_isPlaced) _placedIn = null;
-                        }),
-                      ),
-                      // ... rest of placement fields
-                      const SizedBox(height: 16),
-                      if (_isPlaced)
-                        DropdownButtonFormField<String>(
-                          decoration: _inputDecoration('Placed In'),
-                          value: _placedIn,
-                          items: _placedInOptions
-                              .map(
-                                (v) =>
-                                    DropdownMenuItem(value: v, child: Text(v)),
-                              )
-                              .toList(),
-                          onChanged: (val) => setState(() => _placedIn = val),
-                        ),
-                      const SizedBox(height: 16),
-                      _buildTextField('Designation', _designationController),
-                      _buildTextField(
-                        'Name of Company',
-                        _companyNameController,
-                      ),
-                    ],
+                    // 10. LinkedIn ID
+                    _buildTextField('LinkedIn ID', _linkedInIdController),
 
                     const SizedBox(height: 32),
                     SizedBox(
