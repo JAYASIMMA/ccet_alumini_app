@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:ccet_alumini_app/providers/theme_provider.dart';
 import 'package:ccet_alumini_app/services/notification_service.dart';
 
+import 'package:google_fonts/google_fonts.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
@@ -32,6 +34,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.light,
       primaryColor: const Color(0xFF2575FC), // Blue
       scaffoldBackgroundColor: const Color(0xFFF5F7FA), // Light Grey/White
+      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF2575FC),
         secondary: const Color(0xFF00C6FF), // Light Blue Accent
@@ -57,6 +60,7 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
       ),
       cardTheme: CardThemeData(
@@ -93,6 +97,9 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       primaryColor: const Color(0xFF2575FC),
       scaffoldBackgroundColor: const Color(0xFF121212),
+      textTheme: GoogleFonts.poppinsTextTheme(
+        ThemeData.dark().textTheme,
+      ).apply(bodyColor: Colors.white, displayColor: Colors.white),
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF2575FC),
         brightness: Brightness.dark,
@@ -117,6 +124,7 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
         ),
       ),
       cardTheme: CardThemeData(
@@ -147,11 +155,6 @@ class MyApp extends StatelessWidget {
         ),
         labelStyle: const TextStyle(color: Colors.grey),
         hintStyle: const TextStyle(color: Colors.grey),
-      ),
-      textTheme: const TextTheme(
-        bodyMedium: TextStyle(color: Colors.white),
-        bodyLarge: TextStyle(color: Colors.white),
-        titleMedium: TextStyle(color: Colors.white),
       ),
       iconTheme: const IconThemeData(color: Colors.white70),
     );

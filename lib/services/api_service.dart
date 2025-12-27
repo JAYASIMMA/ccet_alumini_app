@@ -365,6 +365,11 @@ class ApiService {
         'x-is-admin': (user?.isAdmin == true).toString(),
       };
 
+      print('Update Job Headers: $headers');
+      print(
+        'Update Job User: ${user?.username}, Role: ${user?.role}, IsAdmin: ${user?.isAdmin}',
+      );
+
       final response = await http.put(
         Uri.parse('$baseUrl/jobs/$id'),
         headers: headers,
@@ -372,7 +377,11 @@ class ApiService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Failed to update job');
+        print('Update Job Failed. Status: ${response.statusCode}');
+        print('Response Body: ${response.body}');
+        throw Exception(
+          'Failed to update job: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('Error updating job: $e');
