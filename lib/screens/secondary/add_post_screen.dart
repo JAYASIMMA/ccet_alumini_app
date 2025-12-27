@@ -1,6 +1,8 @@
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({super.key});
@@ -11,9 +13,19 @@ class AddPostScreen extends StatefulWidget {
 
 class _AddPostScreenState extends State<AddPostScreen> {
   final _contentController = TextEditingController();
-  final _imageUrlController =
-      TextEditingController(); // Or implement file upload
+  File? _imageFile;
   bool _isLoading = false;
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
 
   Future<void> _submitPost() async {
     if (_contentController.text.isEmpty) {
@@ -27,22 +39,26 @@ class _AddPostScreenState extends State<AddPostScreen> {
     final user = AuthService().currentUser!;
 
     try {
+      String? imageUrl;
+      if (_imageFile != null) {
+        imageUrl = await ApiService.uploadContentImage(_imageFile!);
+      }
+
       await ApiService.createPost({
         'authorName': user.displayName,
         'authorImage': user.photoURL,
         'content': _contentController.text,
-        'imageUrl': _imageUrlController.text.isNotEmpty
-            ? _imageUrlController.text
-            : null,
+        'imageUrl': imageUrl,
       });
       if (mounted) {
         Navigator.pop(context, true); // Return true to refresh
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -66,26 +82,54 @@ class _AddPostScreenState extends State<AddPostScreen> {
           ),
         ),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade400),
+                ),
+                child: _imageFile != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.file(
+                          _imageFile!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_photo_alternate_outlined,
+                            size: 50,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Add Feature Image",
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
             TextField(
               controller: _contentController,
               decoration: const InputDecoration(
                 labelText: 'Post Content',
                 border: OutlineInputBorder(),
+                alignLabelWithHint: true,
               ),
               maxLines: 5,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _imageUrlController,
-              decoration: const InputDecoration(
-                labelText: 'Image URL (Optional)',
-                border: OutlineInputBorder(),
-                hintText: 'https://example.com/image.jpg',
-              ),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -95,11 +139,21 @@ class _AddPostScreenState extends State<AddPostScreen> {
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onPressed: _isLoading ? null : _submitPost,
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Post'),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Post Update', style: TextStyle(fontSize: 16)),
               ),
             ),
           ],

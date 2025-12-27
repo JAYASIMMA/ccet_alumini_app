@@ -203,6 +203,31 @@ class ApiService {
     }
   }
 
+  // --- Upload Methods ---
+  static Future<String?> uploadContentImage(File file) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/upload'),
+      );
+      request.files.add(await http.MultipartFile.fromPath('image', file.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['imageUrl'];
+      } else {
+        print('Upload Failed: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error uploading image: $e');
+      return null;
+    }
+  }
+
   // --- Post Methods ---
   static Future<dynamic> createPost(Map<String, dynamic> data) async {
     return await post('/posts', data);
