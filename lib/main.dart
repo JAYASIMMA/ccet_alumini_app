@@ -191,6 +191,15 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: lightTheme,
       darkTheme: darkTheme,
+      builder: (context, child) {
+        final scale = themeProvider.textScaleFactor;
+        return MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        );
+      },
       home: FutureBuilder(
         future: AuthService().tryAutoLogin(),
         builder: (context, snapshot) {

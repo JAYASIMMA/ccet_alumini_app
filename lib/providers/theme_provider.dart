@@ -9,9 +9,13 @@ class ThemeProvider with ChangeNotifier {
   String _fontFamily = 'Poppins';
   String get fontFamily => _fontFamily;
 
+  double _textScaleFactor = 1.0;
+  double get textScaleFactor => _textScaleFactor;
+
   ThemeProvider() {
     _loadTheme();
     _loadFont();
+    _loadTextScale();
   }
 
   void _loadTheme() async {
@@ -38,6 +42,15 @@ class ThemeProvider with ChangeNotifier {
     }
   }
 
+  void _loadTextScale() async {
+    final prefs = await SharedPreferences.getInstance();
+    final scale = prefs.getDouble('textScaleFactor');
+    if (scale != null) {
+      _textScaleFactor = scale;
+      notifyListeners();
+    }
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
@@ -56,5 +69,12 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('fontFamily', font);
+  }
+
+  Future<void> setTextScaleFactor(double scale) async {
+    _textScaleFactor = scale;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('textScaleFactor', scale);
   }
 }

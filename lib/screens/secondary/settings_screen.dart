@@ -188,6 +188,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          // Text Size Slider
+          ListTile(
+            leading: const Icon(Icons.text_fields),
+            title: const Text('Text Size'),
+            subtitle: Slider(
+              value: themeProvider.textScaleFactor,
+              min: 0.8,
+              max: 1.3,
+              divisions: 5,
+              label: themeProvider.textScaleFactor.toStringAsFixed(1),
+              onChanged: (value) {
+                themeProvider.setTextScaleFactor(value);
+              },
+            ),
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
