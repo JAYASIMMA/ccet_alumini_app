@@ -103,10 +103,15 @@ If `NetworkCategory` is `Public`, Windows blocks more traffic. Change it to Priv
 Set-NetConnectionProfile -InterfaceAlias "WiFi" -NetworkCategory Private
 ```
 # Go to Settings > Wi-Fi.
+
 # Tap the gear icon or the name of your connected network.
+
 # Expand Advanced (if needed) and look for IP Address.
+
 # For iOS:
 
 # Go to Settings > Wi-Fi.
+
 # Tap the blue (i) icon next to your network.
+
 # Look for IP Address.
