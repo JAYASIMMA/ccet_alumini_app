@@ -195,7 +195,7 @@ class _EventsTabState extends State<EventsTab> {
       ),
       floatingActionButton:
           (AuthService().currentUser?.isAdmin == true ||
-              AuthService().currentUser?.isAlumni == true)
+              AuthService().currentUser?.role == 'alumni')
           ? FloatingActionButton(
               onPressed: () async {
                 final result = await Navigator.push(
