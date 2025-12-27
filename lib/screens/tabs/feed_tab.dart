@@ -8,8 +8,12 @@ import 'package:ccet_alumini_app/screens/tabs/events_tab.dart';
 import 'package:ccet_alumini_app/screens/tabs/profile_tab.dart';
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
+import 'package:ccet_alumini_app/widgets/full_screen_image_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
+import 'package:quickalert/quickalert.dart';
+
 
 class FeedTab extends StatefulWidget {
   const FeedTab({super.key});
@@ -52,11 +56,20 @@ class _FeedTabState extends State<FeedTab> {
 
           return RefreshIndicator(
             onRefresh: _refreshPosts,
-            child: ListView.builder(
+            child: AnimationLimiter(
+              child: ListView.builder(
               padding: const EdgeInsets.all(16),
               // Carousel(0) (includes Grid), Empty(1) or Posts(1..N).
               itemCount: posts.isEmpty ? 2 : posts.length + 1,
               itemBuilder: (context, index) {
+                return AnimationConfiguration.staggeredList(
+                  position: index,
+                  duration: const Duration(milliseconds: 375),
+                  child: SlideAnimation(
+                    verticalOffset: 50.0,
+                    child: FadeInAnimation(
+                      child: Builder(
+                        builder: (context) {
                 // --- 1. Header: Carousel + Quick Access ---
                 if (index == 0) {
                   return Column(
@@ -347,24 +360,39 @@ class _FeedTabState extends State<FeedTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (post['imageUrl'] != null)
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
-                          ),
-                          child: Image.network(
-                            ApiService.fixImageUrl(post['imageUrl'])!,
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 200,
-                                color: Colors.grey.shade200,
-                                child: const Center(
-                                  child: Icon(Icons.broken_image, size: 50),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FullScreenImageViewer(
+                                  imageUrl: post['imageUrl'],
                                 ),
-                              );
-                            },
+                              ),
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12),
+                            ),
+                            child: Hero(
+                              tag: post['imageUrl'],
+                              child: Image.network(
+                                ApiService.fixImageUrl(post['imageUrl'])!,
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    height: 200,
+                                    color: Colors.grey.shade200,
+                                    child: const Center(
+                                      child: Icon(Icons.broken_image, size: 50),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
                         ),
                       Padding(
@@ -415,70 +443,41 @@ class _FeedTabState extends State<FeedTab> {
                                       Icons.delete,
                                       color: Colors.red,
                                     ),
-                                    onPressed: () async {
-                                      final confirm = await showDialog<bool>(
+                                    onPressed: () {
+                                      QuickAlert.show(
                                         context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: const Text('Delete Post'),
-                                          content: const Text(
-                                            'Are you sure you want to delete this post?',
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(ctx, false),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(ctx, true),
-                                              child: const Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                        type: QuickAlertType.confirm,
+                                        text: 'Do you want to delete this post?',
+                                        confirmBtnText: 'Delete',
+                                        cancelBtnText: 'Cancel',
+                                        confirmBtnColor: Colors.red,
+                                        onConfirmBtnTap: () async {
+                                          Navigator.pop(context); // Close alert
+                                          try {
+                                            await ApiService.deletePost(
+                                              post['_id'],
+                                            );
+                                            _refreshPosts();
+                                            if (context.mounted) {
+                                              QuickAlert.show(
+                                                context: context,
+                                                type: QuickAlertType.success,
+                                                text: 'Post deleted successfully!',
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              QuickAlert.show(
+                                                context: context,
+                                                type: QuickAlertType.error,
+                                                text: 'Error deleting post: $e',
+                                              );
+                                            }
+                                          }
+                                        },
                                       );
-
-                                      if (confirm == true) {
-                                        try {
-                                          await ApiService.deletePost(
-                                            post['_id'],
-                                          );
-                                          _refreshPosts();
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Post deleted'),
-                                              ),
-                                            );
-                                          }
-                                        } catch (e) {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text('Error: $e'),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      }
                                     },
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              post['content'] ?? '',
-                              style: const TextStyle(fontSize: 16),
-                            ),
+
                           ],
                         ),
                       ),
@@ -487,7 +486,12 @@ class _FeedTabState extends State<FeedTab> {
                 );
               },
             ),
-          );
+          ),
+        ),
+      );
+    },
+  ),
+);
         },
       ),
       floatingActionButton:
