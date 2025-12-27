@@ -497,8 +497,9 @@ class ApiService {
     try {
       final user = AuthService().currentUser;
       final headers = {
-        'x-user-id': user?.uid ?? '',
+        'x-user-id': user?.id ?? '',
         'x-is-admin': (user?.isAdmin == true).toString(),
+        'x-user-department': user?.department ?? '',
       };
 
       final response = await http.delete(
@@ -511,6 +512,31 @@ class ApiService {
       }
     } catch (e) {
       print('Error deleting news: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> updateNews(String id, Map<String, dynamic> data) async {
+    try {
+      final user = AuthService().currentUser;
+      final headers = {
+        'Content-Type': 'application/json',
+        'x-user-id': user?.id ?? '',
+        'x-is-admin': (user?.isAdmin == true).toString(),
+        'x-user-department': user?.department ?? '',
+      };
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/news/$id'),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update news: ${response.body}');
+      }
+    } catch (e) {
+      print('Error updating news: $e');
       rethrow;
     }
   }

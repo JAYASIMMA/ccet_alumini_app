@@ -14,6 +14,8 @@ class AdminUserManagementScreen extends StatefulWidget {
 class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
   late Future<List<dynamic>> _usersFuture;
   bool _isLoading = false;
+  String _searchQuery = '';
+  bool _isGridView = false;
 
   @override
   void initState() {
@@ -327,71 +329,192 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(_isGridView ? Icons.list : Icons.grid_view),
+            onPressed: () {
+              setState(() {
+                _isGridView = !_isGridView;
+              });
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showUserDialog(),
         child: const Icon(Icons.add),
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _usersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search users...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: _usersFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-          final users = snapshot.data ?? [];
+                final users = snapshot.data ?? [];
+                final filteredUsers = users.where((user) {
+                  final username = (user['username'] ?? '')
+                      .toString()
+                      .toLowerCase();
+                  final email = (user['email'] ?? '').toString().toLowerCase();
+                  final name = (user['firstName'] ?? '')
+                      .toString()
+                      .toLowerCase();
+                  return username.contains(_searchQuery) ||
+                      email.contains(_searchQuery) ||
+                      name.contains(_searchQuery);
+                }).toList();
 
-          return RefreshIndicator(
-            onRefresh: _refreshUsers,
-            child: ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                final user = users[index];
-                return ListTile(
-                  leading: Builder(
-                    builder: (context) {
-                      final fixedUrl = ApiService.fixImageUrl(
-                        user['profileImageUrl'],
-                      );
-                      final hasValidUrl =
-                          fixedUrl != null && fixedUrl.isNotEmpty;
-                      final imageProvider = hasValidUrl
-                          ? NetworkImage(fixedUrl)
-                          : null;
+                if (filteredUsers.isEmpty) {
+                  return const Center(child: Text('No users found.'));
+                }
 
-                      return CircleAvatar(
-                        backgroundImage: imageProvider,
-                        onBackgroundImageError: imageProvider != null
-                            ? (_, __) {}
-                            : null,
-                        child: !hasValidUrl
-                            ? Text((user['firstName']?[0] ?? 'U').toUpperCase())
-                            : null,
-                      );
-                    },
-                  ),
-                  title: Text(
-                    '${user['username'] ?? user['firstName']}',
-                  ), // Use username or First Name
-                  subtitle: Text(
-                    '${user['email']} • ${user['role']?.toUpperCase() ?? 'UNK'}',
-                  ),
-                  onTap: () => _showUserDialog(user: user),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: _isLoading
-                        ? null
-                        : () => _deleteUser(user['uid']),
-                  ),
+                return RefreshIndicator(
+                  onRefresh: _refreshUsers,
+                  child: _isGridView
+                      ? GridView.builder(
+                          padding: const EdgeInsets.all(8),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.8,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                              ),
+                          itemCount: filteredUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = filteredUsers[index];
+                            return _buildUserGridItem(user);
+                          },
+                        )
+                      : ListView.builder(
+                          itemCount: filteredUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = filteredUsers[index];
+                            return _buildUserListItem(user);
+                          },
+                        ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildUserListItem(Map<String, dynamic> user) {
+    return ListTile(
+      leading: _buildUserAvatar(user, 24),
+      title: Text('${user['username'] ?? user['firstName']}'),
+      subtitle: Text(
+        '${user['email']} • ${user['role']?.toUpperCase() ?? 'UNK'}',
+      ),
+      onTap: () => _showUserDialog(user: user),
+      trailing: IconButton(
+        icon: const Icon(Icons.delete, color: Colors.red),
+        onPressed: _isLoading ? null : () => _deleteUser(user['uid']),
+      ),
+    );
+  }
+
+  Widget _buildUserGridItem(Map<String, dynamic> user) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () => _showUserDialog(user: user),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildUserAvatar(user, 30),
+              const SizedBox(height: 8),
+              Text(
+                '${user['username'] ?? user['firstName']}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                user['email'] ?? '',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                user['role']?.toUpperCase() ?? 'UNK',
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+              const Spacer(),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                  onPressed: _isLoading ? null : () => _deleteUser(user['uid']),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserAvatar(Map<String, dynamic> user, double radius) {
+    return Builder(
+      builder: (context) {
+        final fixedUrl = ApiService.fixImageUrl(user['profileImageUrl']);
+        final hasValidUrl = fixedUrl != null && fixedUrl.isNotEmpty;
+        final imageProvider = hasValidUrl ? NetworkImage(fixedUrl) : null;
+
+        return CircleAvatar(
+          radius: radius,
+          backgroundImage: imageProvider,
+          onBackgroundImageError: imageProvider != null ? (_, __) {} : null,
+          child: !hasValidUrl
+              ? Text((user['firstName']?[0] ?? 'U').toUpperCase())
+              : null,
+        );
+      },
     );
   }
 }
