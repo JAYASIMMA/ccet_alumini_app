@@ -352,7 +352,7 @@ class _FeedTabState extends State<FeedTab> {
                             top: Radius.circular(12),
                           ),
                           child: Image.network(
-                            post['imageUrl'],
+                            ApiService.fixImageUrl(post['imageUrl'])!,
                             height: 200,
                             width: double.infinity,
                             fit: BoxFit.cover,
