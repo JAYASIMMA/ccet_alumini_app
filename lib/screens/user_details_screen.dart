@@ -160,6 +160,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
         final userModel = UserModel(
           uid: widget.uid,
+          username: '', // or pass in widget
           email: widget.email,
           profileImageUrl: imageUrl,
           firstName: _firstNameController.text.trim(),

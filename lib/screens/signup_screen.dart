@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import '../services/auth_service.dart';
-import 'secondary/edit_profile_screen.dart';
+
+import 'role_selection_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -11,23 +12,30 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
 
   bool _isLoading = false;
+  bool _isObscured = true;
 
   Future<void> _handleSignup() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter both email and password')),
+        const SnackBar(
+          content: Text('Please enter username, email and password'),
+        ),
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    final success = await _authService.signUpWithEmailAndPassword(
+    final success = await _authService.signUp(
+      _usernameController.text.trim(),
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
@@ -135,6 +143,20 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: Column(
                       children: [
                         TextField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            labelText: 'Username',
+                            prefixIcon: const Icon(Icons.person_outline),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
@@ -154,6 +176,18 @@ class _SignupScreenState extends State<SignupScreen> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isObscured = !_isObscured;
+                                });
+                              },
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -161,7 +195,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             filled: true,
                             fillColor: Colors.grey.shade100,
                           ),
-                          obscureText: true,
+                          obscureText: _isObscured,
                         ),
                         const SizedBox(height: 24),
                         SizedBox(

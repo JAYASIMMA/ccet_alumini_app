@@ -1,5 +1,6 @@
 class UserModel {
   final String uid;
+  final String username;
   final String email;
   final String? profileImageUrl;
   final String firstName;
@@ -10,6 +11,7 @@ class UserModel {
   final DateTime? dateOfBirth;
   final String phoneNumber;
   final String countryCode;
+  final String? bloodGroup;
 
   // Getters for compatibility
   String get displayName => '$firstName $lastName';
@@ -43,6 +45,7 @@ class UserModel {
 
   UserModel({
     required this.uid,
+    required this.username,
     required this.email,
     this.profileImageUrl,
     required this.firstName,
@@ -53,6 +56,7 @@ class UserModel {
     this.dateOfBirth,
     required this.phoneNumber,
     this.countryCode = '+91',
+    this.bloodGroup,
     required this.resAddressLine1,
     this.resAddressLine2,
     required this.resDistrict,
@@ -77,6 +81,7 @@ class UserModel {
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
+      'username': username,
       'email': email,
       'profileImageUrl': profileImageUrl,
       'firstName': firstName,
@@ -87,6 +92,7 @@ class UserModel {
       'dateOfBirth': dateOfBirth?.toIso8601String(),
       'phoneNumber': phoneNumber,
       'countryCode': countryCode,
+      'bloodGroup': bloodGroup,
       'resAddressLine1': resAddressLine1,
       'resAddressLine2': resAddressLine2,
       'resDistrict': resDistrict,
@@ -112,6 +118,7 @@ class UserModel {
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       uid: map['uid'] ?? '',
+      username: map['username'] ?? '',
       email: map['email'] ?? '',
       profileImageUrl: map['profileImageUrl'],
       firstName: map['firstName'] ?? '',
@@ -124,6 +131,7 @@ class UserModel {
           : null,
       phoneNumber: map['phoneNumber'] ?? '',
       countryCode: map['countryCode'] ?? '+91',
+      bloodGroup: map['bloodGroup'],
       resAddressLine1: map['resAddressLine1'] ?? '',
       resAddressLine2: map['resAddressLine2'],
       resDistrict: map['resDistrict'] ?? '',

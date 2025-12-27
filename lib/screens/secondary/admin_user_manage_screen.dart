@@ -26,7 +26,6 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
   }
 
   Future<void> _deleteUser(String uid) async {
-    // Confirm Dialog
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -52,17 +51,242 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     setState(() => _isLoading = true);
     try {
       await ApiService.deleteUser(uid);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User deleted')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User deleted')));
+      }
       _refreshUsers();
     } catch (e) {
-      // Since deleteUser logic in API might be placeholder or partial
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showUserDialog({Map<String, dynamic>? user}) {
+    final isEditing = user != null;
+    final usernameController = TextEditingController(text: user?['username']);
+    final emailController = TextEditingController(text: user?['email']);
+    final passwordController = TextEditingController(text: user?['password']);
+    final departmentController = TextEditingController(
+      text: user?['department'] ?? 'CSE',
+    );
+    final completedYearController = TextEditingController(
+      text: user?['completedYear'],
+    );
+
+    // Role & Student Fields
+    String role = user?['role'] ?? 'student';
+    String? currentYear = user?['currentYear'];
+
+    // Default currentYear for new student
+    if (currentYear == null && role == 'student' && !isEditing) {
+      currentYear = '1st Year';
+    }
+
+    bool isObscured = true;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(isEditing ? 'Edit User' : 'Add New User'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: role,
+                    decoration: const InputDecoration(labelText: 'Role'),
+                    items: ['student', 'alumni', 'admin', 'hod', 'faculty']
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r,
+                            child: Text(r.toUpperCase()),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        role = val!;
+                        // Reset fields if role changes
+                        if (role == 'student' && currentYear == null) {
+                          currentYear = '1st Year';
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: usernameController,
+                    decoration: const InputDecoration(labelText: 'Username'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isObscured ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            isObscured = !isObscured;
+                          });
+                        },
+                      ),
+                    ),
+                    obscureText: isObscured,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: departmentController,
+                    decoration: const InputDecoration(labelText: 'Department'),
+                  ),
+                  if (role == 'student') ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Current Year',
+                      ),
+                      value: currentYear,
+                      items: ['1st Year', '2nd Year', '3rd Year', '4th Year']
+                          .map(
+                            (y) => DropdownMenuItem(value: y, child: Text(y)),
+                          )
+                          .toList(),
+                      onChanged: (val) => setState(() => currentYear = val),
+                    ),
+                  ] else if (role == 'alumni') ...[
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: completedYearController,
+                      decoration: const InputDecoration(
+                        labelText: 'Batch (Year)',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ] else if (role == 'hod' || role == 'faculty') ...[
+                    // HOD and Faculty might need Department or Designation, but for now standard fields apply
+                    // You might want to ensure 'department' is editable if it was hidden or defaulted
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await _saveUser(
+                    isEditing: isEditing,
+                    uid: user?['uid'],
+                    username: usernameController.text.trim(),
+                    email: emailController.text.trim(),
+                    password: passwordController.text.trim(),
+                    department: departmentController.text.trim(),
+                    role: role,
+                    currentYear: currentYear,
+                    completedYear: completedYearController.text.trim(),
+                  );
+                },
+                child: Text(isEditing ? 'Update' : 'Create'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _saveUser({
+    required bool isEditing,
+    String? uid,
+    required String username,
+    required String email,
+    required String password,
+    required String department,
+    required String role,
+    String? currentYear,
+    String? completedYear,
+  }) async {
+    if (username.isEmpty || email.isEmpty || (password.isEmpty && !isEditing)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      if (isEditing) {
+        final data = {
+          'username': username,
+          'email': email,
+          'department': department,
+          'role': role,
+          'currentYear': currentYear,
+          'completedYear': completedYear,
+        };
+        if (password.isNotEmpty) {
+          data['password'] = password;
+        }
+        await ApiService.updateUser(uid!, data);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('User updated')));
+        }
+      } else {
+        await ApiService.createUser({
+          'username': username,
+          'email': email,
+          'password': password,
+          'uid': 'user_${DateTime.now().millisecondsSinceEpoch}',
+          'firstName': 'New',
+          'lastName': 'User',
+          'department': department,
+          'rollNumber': '000',
+          'phoneNumber': '0000000000',
+          'resAddressLine1': 'Address',
+          'resDistrict': 'City',
+          'resPincode': '000000',
+          'role': role,
+          'currentYear': currentYear,
+          'completedYear': completedYear,
+          'isAlumni': role == 'alumni',
+          'isAdmin': role == 'admin',
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('User created')));
+        }
+      }
+      _refreshUsers();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Operation failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -84,6 +308,10 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showUserDialog(),
+        child: const Icon(Icons.add),
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: _usersFuture,
         builder: (context, snapshot) {
@@ -102,9 +330,6 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
               itemCount: users.length,
               itemBuilder: (context, index) {
                 final user = users[index];
-                // Do not allow deleting self or other admins (simple check)
-                // Assuming we can check against current user locally but for now just list.
-
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundImage: user['profileImageUrl'] != null
@@ -114,8 +339,13 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                         ? Text((user['firstName']?[0] ?? 'U').toUpperCase())
                         : null,
                   ),
-                  title: Text('${user['firstName']} ${user['lastName']}'),
-                  subtitle: Text(user['email']),
+                  title: Text(
+                    '${user['username'] ?? user['firstName']}',
+                  ), // Use username or First Name
+                  subtitle: Text(
+                    '${user['email']} • ${user['role']?.toUpperCase() ?? 'UNK'}',
+                  ),
+                  onTap: () => _showUserDialog(user: user),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: _isLoading

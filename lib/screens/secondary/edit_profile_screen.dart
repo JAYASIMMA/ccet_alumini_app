@@ -52,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // Dropdown Values
   String? _selectedDepartment;
   String _selectedCountryCode = '+91';
+  String? _selectedBloodGroup; // Add blood group state
   bool _isPlaced = false;
   String? _placedIn; // On Campus/Off Campus
   bool _isPermanentSameAsResidential = false;
@@ -61,6 +62,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', // Add actual departments
   ];
   final List<String> _countryCodes = ['+91', '+1', '+44', '+61']; // Add more
+  final List<String> _bloodGroups = [
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'AB+',
+    'AB-',
+    'O+',
+    'O-',
+  ];
   final List<String> _placedInOptions = ['On Campus', 'Off Campus'];
 
   @override
@@ -106,15 +117,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _permPincodeController = TextEditingController(text: user?.permPincode);
     _linkedInIdController = TextEditingController(text: user?.linkedInId);
 
-    _selectedDepartment = user?.department; // This is the dropdown
-    if (!_departments.contains(_selectedDepartment) &&
-        _selectedDepartment != null &&
-        _selectedDepartment!.isNotEmpty) {
-      // If stored value not in list, maybe add it or ignore? default to null.
-      // For now, proceed.
+    _selectedDepartment = user?.department;
+    // Fix for DropdownButton error: Ensure selected value is in the items list
+    if (_selectedDepartment != null &&
+        !_departments.contains(_selectedDepartment)) {
+      _selectedDepartment = null;
     }
 
     _selectedCountryCode = user?.countryCode ?? '+91';
+    if (!_countryCodes.contains(_selectedCountryCode)) {
+      _selectedCountryCode = '+91';
+    }
+    _selectedBloodGroup = user?.bloodGroup;
+    if (_selectedBloodGroup != null &&
+        !_bloodGroups.contains(_selectedBloodGroup)) {
+      _selectedBloodGroup = null;
+    }
     _isPlaced = user?.isPlaced ?? false;
     _placedIn = user?.placedIn;
     _isPermanentSameAsResidential = user?.isPermanentSameAsResidential ?? false;
@@ -195,15 +213,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate() || _currentUser == null) {
-      // Scroll to top or first error could be implemented here
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill required fields')),
       );
       return;
     }
 
-    // Additional Validation
-    if (_imageFile == null && _currentUser?.photoURL == null) {
+    if (_imageFile == null && _currentUser?.profileImageUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile Image is Required')),
       );
@@ -213,68 +229,65 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      String? photoUrl = _currentUser!.photoURL;
+      String? photoUrl = _currentUser!.profileImageUrl;
 
       if (_imageFile != null) {
         final uploadedUrl = await ApiService.uploadImage(_imageFile!);
         if (uploadedUrl != null) photoUrl = uploadedUrl;
       }
 
-      // Determine if Alumni
       bool isAlumni = false;
       if (_completedYearController.text.isNotEmpty) {
         int? year = int.tryParse(_completedYearController.text.trim());
-        if (year != null) {
-          if (year <= DateTime.now().year) {
-            isAlumni = true;
-          }
+        if (year != null && year <= DateTime.now().year) {
+          isAlumni = true;
         }
       }
 
-      final updatedData = {
-        'uid': _currentUser!.uid,
-        'firstName': _firstNameController.text.trim(),
-        'lastName': _lastNameController.text.trim(),
-        'profileImageUrl': photoUrl,
-        'department': _selectedDepartment,
-        'rollNumber': _rollNumberController.text.trim(),
-        'completedYear': _completedYearController.text.trim(), // Can be empty
-        'dateOfBirth': _dateOfBirth?.toIso8601String(),
-        'phoneNumber': _phoneNumberController.text.trim(),
-        'countryCode': _selectedCountryCode,
-        'resAddressLine1': _resAddressLine1Controller.text.trim(),
-        'resAddressLine2': _resAddressLine2Controller.text.trim(),
-        'resDistrict': _resDistrictController.text.trim(),
-        'resPincode': _resPincodeController.text.trim(),
-        'isPlaced': _isPlaced,
-        'placedIn': _isPlaced ? _placedIn : null,
-        'designation': _designationController.text.trim(), // Designation/Course
-        'companyName': _companyNameController.text.trim(),
-        'isPermanentSameAsResidential': _isPermanentSameAsResidential,
-        'permAddressLine1': _isPermanentSameAsResidential
+      final updatedUser = UserModel(
+        uid: _currentUser!.uid,
+        username: _currentUser!.username,
+        email: _currentUser!.email,
+        profileImageUrl: photoUrl,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        department: _selectedDepartment ?? '',
+        rollNumber: _rollNumberController.text.trim(),
+        completedYear: _completedYearController.text.trim(),
+        dateOfBirth: _dateOfBirth,
+        phoneNumber: _phoneNumberController.text.trim(),
+        countryCode: _selectedCountryCode,
+        bloodGroup: _selectedBloodGroup,
+        resAddressLine1: _resAddressLine1Controller.text.trim(),
+        resAddressLine2: _resAddressLine2Controller.text.trim(),
+        resDistrict: _resDistrictController.text.trim(),
+        resPincode: _resPincodeController.text.trim(),
+        isPlaced: _isPlaced,
+        placedIn: _isPlaced ? _placedIn : null,
+        designation: _designationController.text.trim(),
+        companyName: _companyNameController.text.trim(),
+        isPermanentSameAsResidential: _isPermanentSameAsResidential,
+        permAddressLine1: _isPermanentSameAsResidential
             ? _resAddressLine1Controller.text.trim()
             : _permAddressLine1Controller.text.trim(),
-        'permAddressLine2': _isPermanentSameAsResidential
+        permAddressLine2: _isPermanentSameAsResidential
             ? _resAddressLine2Controller.text.trim()
             : _permAddressLine2Controller.text.trim(),
-        'permDistrict': _isPermanentSameAsResidential
+        permDistrict: _isPermanentSameAsResidential
             ? _resDistrictController.text.trim()
             : _permDistrictController.text.trim(),
-        'permPincode': _isPermanentSameAsResidential
+        permPincode: _isPermanentSameAsResidential
             ? _resPincodeController.text.trim()
             : _permPincodeController.text.trim(),
-        'linkedInId': _linkedInIdController.text.trim(),
-        'isAlumni': isAlumni,
-        'role': widget.selectedRole ?? _currentUser?.role ?? 'alumni',
-        // Add other new fields to map if controllers added
-      };
-
-      final response = await ApiService.put(
-        '/user/${_currentUser!.uid}',
-        updatedData,
+        linkedInId: _linkedInIdController.text.trim(),
+        isAdmin: _currentUser!.isAdmin,
+        isAlumni: isAlumni,
+        role: widget.selectedRole ?? _currentUser?.role ?? 'alumni',
+        currentYear: _currentUser?.currentYear,
+        semester: _currentUser?.semester,
       );
-      final updatedUser = UserModel.fromMap(response);
-      AuthService().updateCurrentUser(updatedUser);
+
+      await AuthService().saveUserDetails(updatedUser);
 
       if (mounted) {
         if (widget.isOnboarding) {
@@ -465,7 +478,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
+                    DropdownButtonFormField<String>(
+                      decoration: _inputDecoration('Blood Group'),
+                      value: _selectedBloodGroup,
+                      items: _bloodGroups
+                          .map(
+                            (bg) =>
+                                DropdownMenuItem(value: bg, child: Text(bg)),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedBloodGroup = val),
+                    ),
+                    const SizedBox(height: 16),
                     _buildSectionHeader('Contact Information'),
                     Row(
                       children: [

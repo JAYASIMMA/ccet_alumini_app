@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
-import '../../services/auth_service.dart';
-import '../welcome_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:auto_size_text/auto_size_text.dart'; // Re-added if used, or I will remove usages
+import 'package:ccet_alumini_app/services/auth_service.dart';
+import 'package:ccet_alumini_app/screens/welcome_screen.dart';
+import 'package:ccet_alumini_app/providers/theme_provider.dart'; // Import ThemeProvider
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _notificationsEnabled = true;
+
+  @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const AutoSizeText('Settings', maxLines: 1),
+        title: const Text('Settings'),
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -18,8 +29,6 @@ class SettingsScreen extends StatelessWidget {
                 Theme.of(context).primaryColor,
                 Theme.of(context).colorScheme.secondary,
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
             ),
           ),
         ),
@@ -27,53 +36,103 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         children: [
           const ListTile(
-            title: AutoSizeText(
+            title: Text(
               'Account',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
-              maxLines: 1,
             ),
           ),
           const ListTile(
             leading: Icon(Icons.person_outline),
-            title: AutoSizeText('Personal Information', maxLines: 1),
+            title: Text('Personal Information'),
             trailing: Icon(Icons.chevron_right),
           ),
           const ListTile(
             leading: Icon(Icons.lock_outline),
-            title: AutoSizeText('Privacy & Security', maxLines: 1),
+            title: Text('Privacy & Security'),
             trailing: Icon(Icons.chevron_right),
           ),
           const Divider(),
           const ListTile(
-            title: AutoSizeText(
+            title: Text(
               'App Settings',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
-              maxLines: 1,
             ),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_outlined),
-            title: const AutoSizeText('Push Notifications', maxLines: 1),
-            value: true,
-            onChanged: (val) {},
+            title: const Text('Push Notifications'),
+            value: _notificationsEnabled,
+            onChanged: (val) {
+              setState(() {
+                _notificationsEnabled = val;
+              });
+            },
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.dark_mode_outlined),
-            title: const AutoSizeText('Dark Mode', maxLines: 1),
-            value: false,
-            onChanged: (val) {},
+          // Theme Selector
+          ListTile(
+            leading: const Icon(Icons.brightness_6),
+            title: const Text('App Theme'),
+            subtitle: Text(
+              themeProvider.themeMode == ThemeMode.system
+                  ? 'System Default'
+                  : themeProvider.themeMode == ThemeMode.light
+                  ? 'Light Theme'
+                  : 'Dark Theme',
+            ),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (BuildContext context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      ListTile(
+                        leading: const Icon(Icons.brightness_auto),
+                        title: const Text('System Default'),
+                        onTap: () {
+                          themeProvider.setThemeMode(ThemeMode.system);
+                          Navigator.pop(context);
+                        },
+                        trailing: themeProvider.themeMode == ThemeMode.system
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.brightness_5),
+                        title: const Text('Light Theme'),
+                        onTap: () {
+                          themeProvider.setThemeMode(ThemeMode.light);
+                          Navigator.pop(context);
+                        },
+                        trailing: themeProvider.themeMode == ThemeMode.light
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.brightness_2),
+                        title: const Text('Dark Theme'),
+                        onTap: () {
+                          themeProvider.setThemeMode(ThemeMode.dark);
+                          Navigator.pop(context);
+                        },
+                        trailing: themeProvider.themeMode == ThemeMode.dark
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  );
+                },
+              );
+            },
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const AutoSizeText(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-              maxLines: 1,
-            ),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
             onTap: () async {
               await AuthService().signOut();
-              if (context.mounted) {
+              if (mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(
                     builder: (context) => const WelcomeScreen(),

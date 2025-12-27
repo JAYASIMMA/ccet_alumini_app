@@ -277,9 +277,25 @@ class ApiService {
   }
 
   static Future<void> deleteUser(String uid) async {
-    // Note: Backend route for deleting user needs implementation.
-    // For now, this is a placeholder or uses a simplified route if available.
-    // Assuming DELETE /user/:uid might be added later.
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/user/$uid'));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete user');
+      }
+    } catch (e) {
+      print('Error deleting user: $e');
+      rethrow;
+    }
+  }
+
+  static Future<void> createUser(Map<String, dynamic> data) async {
+    // Admin creating user. Reusing auth register for now.
+    // Ensure data has password.
+    await post('/auth/register', data);
+  }
+
+  static Future<void> updateUser(String uid, Map<String, dynamic> data) async {
+    await put('/user/$uid', data);
   }
 
   static Future<void> deleteProfileImage(String uid) async {

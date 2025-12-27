@@ -15,6 +15,7 @@ import 'secondary/news_screen.dart';
 import 'secondary/jobs_screen.dart';
 import 'secondary/donation_screen.dart';
 import 'secondary/settings_screen.dart';
+import 'secondary/admin_user_manage_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -158,6 +159,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: const Text('Donations'),
                         onTap: () => _navigateTo(const DonationScreen()),
                       ),
+                      const Divider(),
+                      if (user?.isAdmin == true)
+                        ListTile(
+                          leading: const Icon(
+                            Icons.admin_panel_settings,
+                            color: Color(0xFF6A11CB),
+                          ),
+                          title: const Text('Manage Users'),
+                          onTap: () =>
+                              _navigateTo(const AdminUserManagementScreen()),
+                        ),
                       const Divider(),
                       ListTile(
                         leading: const Icon(Icons.settings, color: Colors.grey),

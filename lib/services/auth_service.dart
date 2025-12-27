@@ -43,16 +43,14 @@ class AuthService {
     return false;
   }
 
-  // Sign up with email and password
-  Future<bool> signUpWithEmailAndPassword(String email, String password) async {
+  // Sign up with username, email and password
+  Future<bool> signUp(String username, String email, String password) async {
     try {
-      // In this flow, we just validated inputs locally or check if user exists.
-      // But creating a user requires full profile.
-      // We will store the password temporarily to use it when saving full profile.
       _tempPassword = password;
 
       _currentUser = UserModel(
         uid: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+        username: username,
         email: email,
         firstName: '',
         lastName: '',
@@ -70,10 +68,10 @@ class AuthService {
     }
   }
 
-  Future<bool> signInWithEmailAndPassword(String email, String password) async {
+  Future<bool> login(String username, String password) async {
     try {
       final response = await ApiService.post('/auth/login', {
-        'email': email,
+        'username': username,
         'password': password,
       });
 
@@ -99,8 +97,13 @@ class AuthService {
 
       if (_tempPassword != null) {
         data['password'] = _tempPassword;
-        await ApiService.post('/auth/register', data);
+        final response = await ApiService.post('/auth/register', data);
         _tempPassword = null; // Clear it
+
+        // Update local user with backend response (which has the real UID)
+        if (response['success'] == true && response['user'] != null) {
+          userModel = UserModel.fromMap(response['user']);
+        }
       } else {
         // Update existing
         await ApiService.put('/user/${userModel.uid}', data);
