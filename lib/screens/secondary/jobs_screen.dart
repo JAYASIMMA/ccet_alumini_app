@@ -1,4 +1,5 @@
 import 'package:ccet_alumini_app/screens/secondary/add_job_screen.dart';
+import 'package:ccet_alumini_app/screens/secondary/edit_job_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/job_viewer_screen.dart'; // Add import
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
@@ -148,9 +149,40 @@ class _JobsScreenState extends State<JobsScreen> {
                                 ),
                               ],
                             ),
-                            trailing:
-                                (AuthService().currentUser?.isAdmin == true)
-                                ? IconButton(
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Edit Button (Visible to Admin or Owner)
+                                if (AuthService().currentUser?.isAdmin ==
+                                        true ||
+                                    (AuthService().currentUser?.uid != null &&
+                                        AuthService().currentUser!.uid ==
+                                            job['postedBy']))
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: Colors.blue,
+                                    ),
+                                    onPressed: () async {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditJobScreen(job: job),
+                                        ),
+                                      );
+                                      if (result == true) {
+                                        _refreshJobs();
+                                      }
+                                    },
+                                  ),
+                                // Delete Button (Visible to Admin or Owner)
+                                if (AuthService().currentUser?.isAdmin ==
+                                        true ||
+                                    (AuthService().currentUser?.uid != null &&
+                                        AuthService().currentUser!.uid ==
+                                            job['postedBy']))
+                                  IconButton(
                                     icon: const Icon(
                                       Icons.delete,
                                       color: Colors.red,
@@ -191,7 +223,10 @@ class _JobsScreenState extends State<JobsScreen> {
                                       );
                                     },
                                   )
-                                : const Icon(Icons.chevron_right),
+                                else
+                                  const Icon(Icons.chevron_right),
+                              ],
+                            ),
                             onTap: () {
                               Navigator.push(
                                 context,

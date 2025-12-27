@@ -332,6 +332,30 @@ class ApiService {
     }
   }
 
+  static Future<void> updateJob(String id, Map<String, dynamic> data) async {
+    try {
+      final user = AuthService().currentUser;
+      final headers = {
+        'Content-Type': 'application/json',
+        'x-user-id': user?.uid ?? '',
+        'x-is-admin': (user?.isAdmin == true).toString(),
+      };
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/jobs/$id'),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update job');
+      }
+    } catch (e) {
+      print('Error updating job: $e');
+      rethrow;
+    }
+  }
+
   // --- Admin User Management ---
   static Future<List<dynamic>> getAllUsers({String? department}) async {
     try {

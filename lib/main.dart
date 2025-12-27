@@ -6,9 +6,11 @@ import 'screens/welcome_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'package:ccet_alumini_app/providers/theme_provider.dart';
+import 'package:ccet_alumini_app/services/notification_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => ThemeProvider())],
