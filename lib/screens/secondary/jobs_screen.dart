@@ -1,4 +1,5 @@
 import 'package:ccet_alumini_app/screens/secondary/add_job_screen.dart';
+import 'package:ccet_alumini_app/screens/secondary/job_viewer_screen.dart'; // Add import
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -86,11 +87,25 @@ class _JobsScreenState extends State<JobsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(8),
+                        image:
+                            (job['images'] != null &&
+                                (job['images'] as List).isNotEmpty)
+                            ? DecorationImage(
+                                image: NetworkImage(
+                                  ApiService.fixImageUrl(job['images'][0])!,
+                                ),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: const Icon(
-                        Icons.business_center,
-                        color: Colors.grey,
-                      ),
+                      child:
+                          (job['images'] != null &&
+                              (job['images'] as List).isNotEmpty)
+                          ? null
+                          : const Icon(
+                              Icons.business_center,
+                              color: Colors.grey,
+                            ),
                     ),
                     title: Text(
                       job['title'],
@@ -169,7 +184,12 @@ class _JobsScreenState extends State<JobsScreen> {
                           )
                         : const Icon(Icons.chevron_right),
                     onTap: () {
-                      // Navigate to details or open link
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => JobViewerScreen(job: job),
+                        ),
+                      );
                     },
                   ),
                 );

@@ -140,11 +140,13 @@ class _SignupScreenState extends State<SignupScreen> {
                   Container(
                     padding: const EdgeInsets.all(32),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardTheme.color ?? Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Theme.of(
+                            context,
+                          ).shadowColor.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -162,7 +164,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor:
+                                Theme.of(
+                                  context,
+                                ).inputDecorationTheme.fillColor ??
+                                Colors.grey.shade100,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -175,8 +181,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor:
+                                Theme.of(
+                                  context,
+                                ).inputDecorationTheme.fillColor ??
+                                Colors.grey.shade100,
                           ),
                           keyboardType: TextInputType.emailAddress,
                         ),
@@ -202,8 +211,11 @@ class _SignupScreenState extends State<SignupScreen> {
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
                             ),
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
+                            fillColor:
+                                Theme.of(
+                                  context,
+                                ).inputDecorationTheme.fillColor ??
+                                Colors.grey.shade100,
                           ),
                           obscureText: _isObscured,
                         ),

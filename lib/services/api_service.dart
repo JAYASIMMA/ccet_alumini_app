@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
+import 'package:ccet_alumini_app/services/auth_service.dart';
 
 class ApiService {
   static String get baseUrl {
@@ -300,7 +301,17 @@ class ApiService {
 
   static Future<void> deleteJob(String id) async {
     try {
-      final response = await http.delete(Uri.parse('$baseUrl/jobs/$id'));
+      final user = AuthService().currentUser;
+      final headers = {
+        'x-user-id': user?.uid ?? '',
+        'x-is-admin': (user?.isAdmin == true).toString(),
+      };
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/jobs/$id'),
+        headers: headers,
+      );
+
       if (response.statusCode != 200) {
         throw Exception('Failed to delete job');
       }
