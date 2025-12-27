@@ -1,13 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:ccet_alumini_app/screens/secondary/add_news_screen.dart';
+import 'package:ccet_alumini_app/screens/secondary/news_viewer_screen.dart';
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
-import 'package:quickalert/quickalert.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -65,7 +64,6 @@ class _NewsScreenState extends State<NewsScreen> {
       ),
       body: Column(
         children: [
-          // Search and Date Filter Section
           Container(
             padding: const EdgeInsets.all(12.0),
             decoration: BoxDecoration(
@@ -86,17 +84,7 @@ class _NewsScreenState extends State<NewsScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search news...',
-                      hintStyle: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                      ),
+                      prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
@@ -105,88 +93,35 @@ class _NewsScreenState extends State<NewsScreen> {
                       fillColor: Theme.of(context).brightness == Brightness.dark
                           ? const Color(0xFF2C2C2C)
                           : Colors.grey.shade100,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value.toLowerCase();
-                      });
-                    },
+                    onChanged: (value) =>
+                        setState(() => _searchQuery = value.toLowerCase()),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  decoration: BoxDecoration(
+                IconButton(
+                  icon: Icon(
+                    Icons.calendar_today,
                     color: _selectedDate != null
-                        ? Theme.of(context).primaryColor.withOpacity(0.1)
-                        : (Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF2C2C2C)
-                              : Colors.grey.shade100),
-                    borderRadius: BorderRadius.circular(10),
+                        ? Theme.of(context).primaryColor
+                        : null,
                   ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.calendar_today,
-                      color: _selectedDate != null
-                          ? Theme.of(context).primaryColor
-                          : (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade600),
-                    ),
-                    onPressed: () async {
-                      final pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate ?? DateTime.now(),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                        builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: ColorScheme.light(
-                                primary: Theme.of(context).primaryColor,
-                                onPrimary: Colors.white,
-                                surface: Theme.of(context).cardColor,
-                                onSurface: Theme.of(
-                                  context,
-                                ).textTheme.bodyLarge!.color!,
-                              ),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (pickedDate != null && pickedDate != _selectedDate) {
-                        setState(() {
-                          _selectedDate = pickedDate;
-                        });
-                      }
-                    },
-                    tooltip: 'Filter by Date',
-                  ),
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) setState(() => _selectedDate = picked);
+                  },
                 ),
-                if (_selectedDate != null) ...[
-                  const SizedBox(width: 4),
+                if (_selectedDate != null)
                   IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey.shade400
-                          : Colors.grey.shade600,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _selectedDate = null;
-                      });
-                    },
-                    tooltip: 'Clear Date',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _selectedDate = null),
                   ),
-                ],
               ],
             ),
           ),
@@ -197,72 +132,36 @@ class _NewsScreenState extends State<NewsScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                if (snapshot.hasError) {
+                if (snapshot.hasError)
                   return Center(child: Text('Error: ${snapshot.error}'));
-                }
 
-                final allNews = snapshot.data ?? [];
-
-                final newsList = allNews.where((news) {
+                final newsList = (snapshot.data ?? []).where((news) {
                   final title = (news['title'] ?? '').toString().toLowerCase();
                   final content = (news['content'] ?? '')
                       .toString()
                       .toLowerCase();
-                  final department = (news['department'] ?? '')
+                  final dept = (news['department'] ?? '')
                       .toString()
                       .toLowerCase();
 
-                  bool matchesSearch =
+                  bool matchesQuery =
                       title.contains(_searchQuery) ||
                       content.contains(_searchQuery) ||
-                      department.contains(_searchQuery);
+                      dept.contains(_searchQuery);
 
                   bool matchesDate = true;
-                  if (_selectedDate != null) {
-                    // Priority to 'date' field (News Date), fallback to maybe match Logic if needed.
-                    // Schema has 'date' field.
-                    if (news['date'] != null) {
-                      final newsDate = DateTime.parse(news['date']);
-                      matchesDate =
-                          newsDate.year == _selectedDate!.year &&
-                          newsDate.month == _selectedDate!.month &&
-                          newsDate.day == _selectedDate!.day;
-                    } else {
-                      matchesDate = false;
-                    }
+                  if (_selectedDate != null && news['date'] != null) {
+                    final d = DateTime.parse(news['date']);
+                    matchesDate =
+                        d.year == _selectedDate!.year &&
+                        d.month == _selectedDate!.month &&
+                        d.day == _selectedDate!.day;
                   }
-
-                  return matchesSearch && matchesDate;
+                  return matchesQuery && matchesDate;
                 }).toList();
 
-                if (newsList.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.newspaper,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No News Yet',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        Text(
-                          'Stay tuned for updates!',
-                          style: TextStyle(color: Colors.grey.shade500),
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                if (newsList.isEmpty)
+                  return const Center(child: Text('No news found.'));
 
                 return RefreshIndicator(
                   onRefresh: () async => _refreshNews(),
@@ -272,8 +171,6 @@ class _NewsScreenState extends State<NewsScreen> {
                       itemCount: newsList.length,
                       itemBuilder: (context, index) {
                         final news = newsList[index];
-                        final links = news['links'] as Map<String, dynamic>?;
-
                         return AnimationConfiguration.staggeredList(
                           position: index,
                           duration: const Duration(milliseconds: 375),
@@ -287,236 +184,115 @@ class _NewsScreenState extends State<NewsScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // News Image
-                                    if (news['image'] != null &&
-                                        news['image'].toString().isNotEmpty)
-                                      SizedBox(
-                                        height: 200,
-                                        width: double.infinity,
-                                        child: Image.network(
-                                          ApiService.fixImageUrl(
-                                            news['image'],
-                                          )!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  Container(
-                                                    color: Colors.grey.shade200,
-                                                    child: const Center(
-                                                      child: Icon(
-                                                        Icons.broken_image,
-                                                      ),
-                                                    ),
-                                                  ),
-                                        ),
+                                child: InkWell(
+                                  onTap: () async {
+                                    final res = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (c) =>
+                                            NewsViewerScreen(news: news),
                                       ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
+                                    );
+                                    if (res == true) _refreshNews();
+                                  },
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (news['image'] != null &&
+                                          news['image'].toString().isNotEmpty)
+                                        SizedBox(
+                                          height: 180,
+                                          width: double.infinity,
+                                          child: Image.network(
+                                            ApiService.fixImageUrl(
+                                              news['image'],
+                                            )!,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              news['title'],
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 8),
+                                            if (news['department'] != null &&
+                                                news['department'] != 'General')
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
                                                 child: Text(
-                                                  news['title'],
+                                                  news['department'],
                                                   style: const TextStyle(
-                                                    fontSize: 18,
+                                                    color: Colors.blue,
+                                                    fontSize: 11,
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
                                               ),
-                                              // Delete Button (Admin or Author)
-                                              if (AuthService()
-                                                          .currentUser
-                                                          ?.isAdmin ==
-                                                      true ||
-                                                  (news['author'] != null &&
-                                                      AuthService()
-                                                              .currentUser
-                                                              ?.uid ==
-                                                          news['author']['_id']))
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    Icons.delete,
-                                                    color: Colors.red,
-                                                    size: 20,
-                                                  ),
-                                                  onPressed: () {
-                                                    QuickAlert.show(
-                                                      context: context,
-                                                      type: QuickAlertType
-                                                          .confirm,
-                                                      text: 'Delete this news?',
-                                                      confirmBtnText: 'Delete',
-                                                      cancelBtnText: 'Cancel',
-                                                      confirmBtnColor:
-                                                          Colors.red,
-                                                      onConfirmBtnTap: () async {
-                                                        Navigator.pop(context);
-                                                        try {
-                                                          await ApiService.deleteNews(
-                                                            news['_id'],
-                                                          );
-                                                          _refreshNews();
-                                                        } catch (e) {
-                                                          if (context.mounted) {
-                                                            ScaffoldMessenger.of(
-                                                              context,
-                                                            ).showSnackBar(
-                                                              SnackBar(
-                                                                content: Text(
-                                                                  'Error: $e',
-                                                                ),
-                                                              ),
-                                                            );
-                                                          }
-                                                        }
-                                                      },
-                                                    );
-                                                  },
-                                                ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          if (news['department'] != null &&
-                                              news['department'] != 'General')
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 4,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.withOpacity(
-                                                  0.1,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                news['department'],
-                                                style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            news['content'],
-                                            style: const TextStyle(
-                                              fontSize: 15,
-                                            ),
-                                          ),
-
-                                          // Social Media Links
-                                          if (links != null &&
-                                              links.isNotEmpty) ...[
-                                            const SizedBox(height: 16),
-                                            const Divider(),
                                             const SizedBox(height: 8),
+                                            Text(
+                                              news['content'],
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: Colors.grey.shade700,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
                                             Row(
                                               mainAxisAlignment:
-                                                  MainAxisAlignment.spaceEvenly,
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
                                               children: [
-                                                if (links['whatsapp'] != null)
-                                                  _buildSocialIcon(
-                                                    Icons.chat,
-                                                    Colors.green,
-                                                    links['whatsapp'],
-                                                  ),
-                                                if (links['youtube'] != null)
-                                                  _buildSocialIcon(
-                                                    Icons.video_library,
-                                                    Colors.red,
-                                                    links['youtube'],
-                                                  ),
-                                                if (links['facebook'] != null)
-                                                  _buildSocialIcon(
-                                                    Icons.facebook,
-                                                    Colors.blue.shade900,
-                                                    links['facebook'],
-                                                  ),
-                                                if (links['instagram'] != null)
-                                                  _buildSocialIcon(
-                                                    Icons.camera_alt,
-                                                    Colors.purple,
-                                                    links['instagram'],
-                                                  ),
-                                              ],
-                                            ),
-                                          ],
-
-                                          const SizedBox(height: 12),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                DateFormat.yMMMd()
-                                                    .add_jm()
-                                                    .format(
-                                                      DateTime.parse(
-                                                        news['date'],
-                                                      ),
-                                                    ),
-                                                style: TextStyle(
-                                                  color: Colors.grey.shade600,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                              // "Posted ago" logic
-                                              if (news['date'] != null)
                                                 Text(
-                                                  ' • ${timeago.format(DateTime.parse(news['date']))}',
+                                                  DateFormat.yMMMd().format(
+                                                    DateTime.parse(
+                                                      news['date'],
+                                                    ),
+                                                  ),
                                                   style: TextStyle(
                                                     color: Colors.grey.shade500,
                                                     fontSize: 12,
-                                                    fontStyle: FontStyle.italic,
                                                   ),
                                                 ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              if (news['author'] != null)
-                                                Row(
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.person,
-                                                      size: 14,
-                                                      color: Colors.grey,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      news['author']['username'] ??
-                                                          'Unknown',
-                                                      style: TextStyle(
-                                                        color: Colors
-                                                            .grey
-                                                            .shade600,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ],
+                                                Text(
+                                                  news['author']?['username'] ??
+                                                      'Admin',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade500,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
-                                            ],
-                                          ),
-                                        ],
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -531,30 +307,22 @@ class _NewsScreenState extends State<NewsScreen> {
           ),
         ],
       ),
-      floatingActionButton: (AuthService().currentUser?.role != 'student')
+      floatingActionButton:
+          (AuthService().currentUser?.role == 'admin' ||
+              AuthService().currentUser?.role == 'hod' ||
+              AuthService().currentUser?.role == 'faculty')
           ? FloatingActionButton(
               onPressed: () async {
-                final result = await Navigator.push(
+                final res = await Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddNewsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (c) => const AddNewsScreen()),
                 );
-                if (result == true) {
-                  _refreshNews();
-                }
+                if (res == true) _refreshNews();
               },
               backgroundColor: Theme.of(context).primaryColor,
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
-    );
-  }
-
-  Widget _buildSocialIcon(IconData icon, Color color, String url) {
-    return IconButton(
-      icon: Icon(icon, color: color, size: 28),
-      onPressed: () => _launchUrl(url),
     );
   }
 }
