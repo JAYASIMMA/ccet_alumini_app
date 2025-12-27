@@ -3,6 +3,7 @@ import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
 class AddEventScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
   final _locationController = TextEditingController();
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
   File? _imageFile;
+  File? _docFile;
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
@@ -28,6 +30,18 @@ class _AddEventScreenState extends State<AddEventScreen> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _pickDocument() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (result != null) {
+      setState(() {
+        _docFile = File(result.files.single.path!);
       });
     }
   }
@@ -56,6 +70,14 @@ class _AddEventScreenState extends State<AddEventScreen> {
         imageUrl = await ApiService.uploadContentImage(_imageFile!);
       }
 
+      List<String> attachments = [];
+      if (_docFile != null) {
+        final docUrl = await ApiService.uploadDocument(_docFile!);
+        if (docUrl != null) {
+          attachments.add(docUrl);
+        }
+      }
+
       await ApiService.createEvent({
         'title': _titleController.text,
         'description': _descController.text,
@@ -63,6 +85,7 @@ class _AddEventScreenState extends State<AddEventScreen> {
         'location': _locationController.text,
         'organizerId': user.uid,
         'imageUrl': imageUrl,
+        'attachments': attachments,
       });
       if (mounted) {
         Navigator.pop(context, true);
@@ -139,6 +162,24 @@ class _AddEventScreenState extends State<AddEventScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+              // PDF Attachment UI
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(
+                  Icons.picture_as_pdf,
+                  color: Colors.deepPurple,
+                ),
+                title: Text(
+                  _docFile != null
+                      ? "Selected: ${_docFile!.path.split('/').last}"
+                      : "Attach PDF Declaration/Invitation",
+                ),
+                trailing: TextButton(
+                  onPressed: _pickDocument,
+                  child: const Text("Pick PDF"),
+                ),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(

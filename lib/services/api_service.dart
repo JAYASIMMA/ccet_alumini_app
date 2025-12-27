@@ -205,25 +205,33 @@ class ApiService {
 
   // --- Upload Methods ---
   static Future<String?> uploadContentImage(File file) async {
+    return await uploadFile(file);
+  }
+
+  static Future<String?> uploadDocument(File file) async {
+    return await uploadFile(file);
+  }
+
+  static Future<String?> uploadFile(File file) async {
     try {
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/upload'),
       );
-      request.files.add(await http.MultipartFile.fromPath('image', file.path));
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['imageUrl'];
+        return data['imageUrl']; // Backend returns 'imageUrl' key currently
       } else {
         print('Upload Failed: ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Error uploading image: $e');
+      print('Error uploading file: $e');
       return null;
     }
   }
