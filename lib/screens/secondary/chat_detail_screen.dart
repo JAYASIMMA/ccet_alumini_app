@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import 'package:intl/intl.dart';
@@ -24,6 +28,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final String _currentUid = AuthService().currentUser?.uid ?? '';
   List<dynamic> _messages = [];
   Timer? _pollingTimer;
+  final ImagePicker _picker = ImagePicker();
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -64,6 +70,114 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _messageController.clear();
     await ApiService.sendMessage(_currentUid, widget.targetUid, content);
     _fetchMessages();
+  }
+
+  Future<void> _pickAndSendImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+
+    setState(() => _isSending = true);
+    try {
+      final String? imageUrl = await ApiService.uploadContentImage(
+        File(image.path),
+      );
+      if (imageUrl != null) {
+        await ApiService.sendMessage(
+          _currentUid,
+          widget.targetUid,
+          null,
+          imageUrl: imageUrl,
+        );
+        _fetchMessages();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  void _showZoomedImage(String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: PhotoView(
+            imageProvider: NetworkImage(ApiService.fixImageUrl(imageUrl)!),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
+      }
+    }
+  }
+
+  List<InlineSpan> _parseContent(String text, bool isMe) {
+    final List<InlineSpan> spans = [];
+    final urlRegExp = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+
+    int start = 0;
+    urlRegExp.allMatches(text).forEach((match) {
+      if (match.start > start) {
+        spans.add(
+          TextSpan(
+            text: text.substring(start, match.start),
+            style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+          ),
+        );
+      }
+
+      final url = match.group(0)!;
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: GestureDetector(
+            onTap: () => _launchUrl(url),
+            child: Text(
+              url,
+              style: const TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+      );
+      start = match.end;
+    });
+
+    if (start < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(start),
+          style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+        ),
+      );
+    }
+
+    return spans;
   }
 
   @override
@@ -124,21 +238,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       maxWidth: MediaQuery.of(context).size.width * 0.75,
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          msg['content'] ?? '',
-                          style: TextStyle(
-                            color: isMe ? Colors.white : Colors.black87,
-                            fontSize: 16,
+                        if (msg['imageUrl'] != null &&
+                            msg['imageUrl'].toString().isNotEmpty)
+                          GestureDetector(
+                            onTap: () => _showZoomedImage(msg['imageUrl']),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                ApiService.fixImageUrl(msg['imageUrl'])!,
+                                width: double.infinity,
+                                height: 150,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image),
+                              ),
+                            ),
                           ),
-                        ),
+                        if (msg['content'] != null &&
+                            msg['content'].toString().isNotEmpty) ...[
+                          if (msg['imageUrl'] != null)
+                            const SizedBox(height: 8),
+                          RichText(
+                            text: TextSpan(
+                              children: _parseContent(msg['content']!, isMe),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 4),
-                        Text(
-                          time,
-                          style: TextStyle(
-                            color: isMe ? Colors.white70 : Colors.black54,
-                            fontSize: 10,
+                        Align(
+                          alignment: Alignment.bottomRight,
+                          child: Text(
+                            time,
+                            style: TextStyle(
+                              color: isMe ? Colors.white70 : Colors.black54,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
                       ],
@@ -153,6 +290,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             color: Colors.white,
             child: Row(
               children: [
+                IconButton(
+                  icon: Icon(Icons.image, color: Colors.grey.shade600),
+                  onPressed: _pickAndSendImage,
+                ),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
@@ -175,10 +316,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 const SizedBox(width: 8),
                 CircleAvatar(
                   backgroundColor: const Color(0xFF2575FC),
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                    onPressed: _sendMessage,
-                  ),
+                  child: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(
+                            Icons.send,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          onPressed: _sendMessage,
+                        ),
                 ),
               ],
             ),

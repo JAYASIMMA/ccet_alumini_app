@@ -226,15 +226,17 @@ class ApiService {
 
   // --- Message Methods ---
 
-  static Future<dynamic> sendMessage(
+  static Future<void> sendMessage(
     String sender,
     String recipient,
-    String content,
-  ) async {
-    return await post('/messages/send', {
+    String? content, {
+    String? imageUrl,
+  }) async {
+    await post('/messages/send', {
       'sender': sender,
       'recipient': recipient,
       'content': content,
+      'imageUrl': imageUrl,
     });
   }
 
