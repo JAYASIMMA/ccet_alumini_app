@@ -1,5 +1,10 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:ccet_alumini_app/screens/secondary/chat_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/add_post_screen.dart';
+import 'package:ccet_alumini_app/screens/secondary/jobs_screen.dart';
+import 'package:ccet_alumini_app/screens/secondary/news_screen.dart';
+import 'package:ccet_alumini_app/screens/tabs/events_tab.dart';
+import 'package:ccet_alumini_app/screens/tabs/profile_tab.dart';
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -48,10 +53,13 @@ class _FeedTabState extends State<FeedTab> {
             onRefresh: _refreshPosts,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
+              // Carousel(0) (includes Grid), Empty(1) or Posts(1..N).
               itemCount: posts.isEmpty ? 2 : posts.length + 1,
               itemBuilder: (context, index) {
+                // --- 1. Header: Carousel + Quick Access ---
                 if (index == 0) {
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CarouselSlider(
                         options: CarouselOptions(
@@ -143,7 +151,93 @@ class _FeedTabState extends State<FeedTab> {
                               );
                             }).toList(),
                       ),
+                      // --- Quick Access Grid (Moved here) ---
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(0, 24, 0, 16),
+                        child: Text(
+                          "Quick Access",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 3, // Increased to 3 to fit more items
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: 1.1,
+                        children: [
+                          _buildGridCard(
+                            context,
+                            "Job Portal",
+                            Icons.work_outline,
+                            Colors.blueAccent,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const JobsScreen(),
+                              ),
+                            ),
+                          ),
+                          _buildGridCard(
+                            context,
+                            "News",
+                            Icons.article_outlined,
+                            Colors.orangeAccent,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const NewsScreen(),
+                              ),
+                            ),
+                          ),
+                          _buildGridCard(
+                            context,
+                            "Profile",
+                            Icons.person_outline,
+                            Colors.purpleAccent,
+                            // Navigate to ProfileTab (view mode)
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    Scaffold(body: ProfileTab()),
+                              ),
+                            ),
+                          ),
+                          _buildGridCard(
+                            context,
+                            "Events",
+                            Icons.calendar_month_outlined,
+                            Colors.teal,
+                            // Navigate to EventsTab
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    Scaffold(appBar: null, body: EventsTab()),
+                              ),
+                            ),
+                          ),
+                          _buildGridCard(
+                            context,
+                            "Chat",
+                            Icons.chat_bubble_outline,
+                            Colors.pinkAccent,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ChatScreen(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 24),
+
                       if (posts.isNotEmpty)
                         const Padding(
                           padding: EdgeInsets.only(bottom: 16),
@@ -159,9 +253,10 @@ class _FeedTabState extends State<FeedTab> {
                   );
                 }
 
+                // --- 2. Empty State (Index 1) ---
                 if (posts.isEmpty) {
                   return SizedBox(
-                    height: 400, // Fixed height for empty state
+                    height: 250,
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -190,6 +285,7 @@ class _FeedTabState extends State<FeedTab> {
                   );
                 }
 
+                // --- 4. Post Card (Index 1..N) ---
                 final post = posts[index - 1];
                 return Card(
                   elevation: 2,
@@ -363,6 +459,52 @@ class _FeedTabState extends State<FeedTab> {
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
+    );
+  }
+
+  Widget _buildGridCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
