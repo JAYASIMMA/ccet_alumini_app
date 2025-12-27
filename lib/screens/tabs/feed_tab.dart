@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:ccet_alumini_app/screens/secondary/add_post_screen.dart';
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
@@ -42,41 +43,102 @@ class _FeedTabState extends State<FeedTab> {
 
           final posts = snapshot.data ?? [];
 
-          if (posts.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.feed_outlined,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No posts yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  Text(
-                    'Check back later for updates!',
-                    style: TextStyle(color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
-            );
-          }
+          final posts = snapshot.data ?? [];
 
           return RefreshIndicator(
             onRefresh: _refreshPosts,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: posts.length,
+              itemCount: posts.isEmpty ? 2 : posts.length + 1,
               itemBuilder: (context, index) {
-                final post = posts[index];
+                if (index == 0) {
+                  return Column(
+                    children: [
+                      CarouselSlider(
+                        options: CarouselOptions(
+                          height: 180.0,
+                          autoPlay: true,
+                          enlargeCenterPage: true,
+                          aspectRatio: 16 / 9,
+                          autoPlayCurve: Curves.fastOutSlowIn,
+                          enableInfiniteScroll: true,
+                          autoPlayAnimationDuration: const Duration(
+                            milliseconds: 800,
+                          ),
+                          viewportFraction: 0.8,
+                        ),
+                        items:
+                            [
+                              'assets/images/banner_1.png',
+                              'assets/images/banner_2.png',
+                            ].map((i) {
+                              return Builder(
+                                builder: (BuildContext context) {
+                                  return Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 5.0,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      image: DecorationImage(
+                                        image: AssetImage(i),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      if (posts.isNotEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            "Latest Updates",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                }
+
+                if (posts.isEmpty) {
+                  return SizedBox(
+                    height: 400, // Fixed height for empty state
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.feed_outlined,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No posts yet',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          Text(
+                            'Check back later for updates!',
+                            style: TextStyle(color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final post = posts[index - 1];
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 16),
