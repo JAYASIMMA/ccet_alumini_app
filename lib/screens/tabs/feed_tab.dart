@@ -43,8 +43,6 @@ class _FeedTabState extends State<FeedTab> {
 
           final posts = snapshot.data ?? [];
 
-          final posts = snapshot.data ?? [];
-
           return RefreshIndicator(
             onRefresh: _refreshPosts,
             child: ListView.builder(
@@ -71,6 +69,11 @@ class _FeedTabState extends State<FeedTab> {
                             [
                               'assets/images/banner_1.png',
                               'assets/images/banner_2.png',
+                              'assets/images/banner_3.png',
+                              'assets/images/banner_4.png',
+                              'assets/images/banner_5.png',
+                              'assets/images/banner_6.png',
+                              'assets/images/banner_7.png',
                             ].map((i) {
                               return Builder(
                                 builder: (BuildContext context) {
