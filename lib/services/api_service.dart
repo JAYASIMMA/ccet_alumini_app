@@ -5,12 +5,9 @@ import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   static String get baseUrl {
-    // For physical device via USB, run: adb reverse tcp:3000 tcp:3000
-    // This allows the phone to access localhost:3000
-    return 'http://localhost:3000/api';
-
-    // If using Emulator without adb reverse, use:
-    // if (Platform.isAndroid) return 'http://10.0.2.2:3000/api';
+    // For physical device, use the machine's LAN IP.
+    // Found via ipconfig: 192.168.1.33
+    return 'http://192.168.1.33:3000/api';
   }
 
   static Future<Map<String, dynamic>> post(
@@ -18,11 +15,16 @@ class ApiService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
+      print('API Request: POST $baseUrl$endpoint');
+      print('Data: ${jsonEncode(data)}');
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl$endpoint'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(data),
+          )
+          .timeout(const Duration(seconds: 10)); // Add 10s timeout
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
@@ -39,7 +41,10 @@ class ApiService {
 
   static Future<dynamic> get(String endpoint) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl$endpoint'));
+      print('API Request: GET $baseUrl$endpoint');
+      final response = await http
+          .get(Uri.parse('$baseUrl$endpoint'))
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
