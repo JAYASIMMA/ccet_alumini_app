@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:ccet_alumini_app/services/api_service.dart';
+import 'package:ccet_alumini_app/widgets/full_screen_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -77,126 +79,154 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
           children: [
             if (event['imageUrl'] != null &&
                 event['imageUrl'].toString().isNotEmpty)
-              Image.network(
-                ApiService.fixImageUrl(event['imageUrl'])!,
-                height: 250,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          FullScreenImageViewer(imageUrl: event['imageUrl']),
+                    ),
+                  );
+                },
+                child: Hero(
+                  tag: 'event-image-${event['_id'] ?? event['title']}',
+                  child: Image.network(
+                    ApiService.fixImageUrl(event['imageUrl'])!,
+                    height: 250,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
+                  ),
+                ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event['title'],
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+            AnimationLimiter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: AnimationConfiguration.toStaggeredList(
+                    duration: const Duration(milliseconds: 375),
+                    childAnimationBuilder: (widget) => SlideAnimation(
+                      verticalOffset: 50.0,
+                      child: FadeInAnimation(child: widget),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
                     children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
                       Text(
-                        DateFormat.yMMMMEEEEd().format(
-                          DateTime.parse(event['date']),
-                        ),
+                        event['title'],
                         style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat.jm().format(DateTime.parse(event['date'])),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        event['location'],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "About",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    event['description'],
-                    style: const TextStyle(fontSize: 16, height: 1.5),
-                  ),
-                  const SizedBox(height: 24),
-                  if (attachments.isNotEmpty) ...[
-                    const Text(
-                      "Attachments",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...attachments
-                        .map(
-                          (url) => Card(
-                            child: ListTile(
-                              leading: const Icon(
-                                Icons.picture_as_pdf,
-                                color: Colors.red,
-                              ),
-                              title: const Text("View Attachment (PDF)"),
-                              trailing: const Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                              ),
-                              onTap: () => _openPdf(url),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat.yMMMMEEEEd().format(
+                              DateTime.parse(event['date']),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
                             ),
                           ),
-                        )
-                        .toList(),
-                  ],
-                  if (_downloading)
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                ],
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            DateFormat.jm().format(
+                              DateTime.parse(event['date']),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            event['location'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "About",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        event['description'],
+                        style: const TextStyle(fontSize: 16, height: 1.5),
+                      ),
+                      const SizedBox(height: 24),
+                      if (attachments.isNotEmpty) ...[
+                        const Text(
+                          "Attachments",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...attachments
+                            .map(
+                              (url) => Card(
+                                child: ListTile(
+                                  leading: const Icon(
+                                    Icons.picture_as_pdf,
+                                    color: Colors.red,
+                                  ),
+                                  title: const Text("View Attachment (PDF)"),
+                                  trailing: const Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 16,
+                                  ),
+                                  onTap: () => _openPdf(url),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ],
+                      if (_downloading)
+                        const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
