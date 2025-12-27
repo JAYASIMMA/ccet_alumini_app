@@ -12,6 +12,9 @@ class ApiService {
 
   static String? fixImageUrl(String? url) {
     if (url == null) return null;
+    if (url.startsWith('/')) {
+      return 'http://192.168.1.33:3000$url';
+    }
     if (url.contains('localhost')) {
       return url.replaceFirst('localhost', '192.168.1.33');
     }
