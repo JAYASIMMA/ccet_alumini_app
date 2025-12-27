@@ -180,6 +180,43 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return spans;
   }
 
+  Widget _buildDateHeader(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final msgDate = DateTime(date.year, date.month, date.day);
+
+    String label;
+    if (msgDate == today) {
+      label = 'Today';
+    } else if (msgDate == yesterday) {
+      label = 'Yesterday';
+    } else {
+      label = DateFormat.yMMMMd().format(date);
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -205,82 +242,105 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               itemBuilder: (context, index) {
                 final msg = _messages[index];
                 final isMe = msg['sender'] == _currentUid;
-                final time = msg['timestamp'] != null
-                    ? DateFormat(
-                        'HH:mm',
-                      ).format(DateTime.parse(msg['timestamp']))
-                    : '';
+                if (msg['timestamp'] == null) return const SizedBox.shrink();
+                final DateTime messageDate = DateTime.parse(msg['timestamp']);
+                final time = DateFormat('HH:mm').format(messageDate);
 
-                return Align(
-                  alignment: isMe
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isMe
-                          ? const Color(0xFF2575FC)
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(20).copyWith(
-                        bottomRight: isMe
-                            ? Radius.zero
-                            : const Radius.circular(20),
-                        bottomLeft: isMe
-                            ? const Radius.circular(20)
-                            : Radius.zero,
-                      ),
-                    ),
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.75,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (msg['imageUrl'] != null &&
-                            msg['imageUrl'].toString().isNotEmpty)
-                          GestureDetector(
-                            onTap: () => _showZoomedImage(msg['imageUrl']),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                ApiService.fixImageUrl(msg['imageUrl'])!,
-                                width: double.infinity,
-                                height: 150,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image),
-                              ),
-                            ),
-                          ),
-                        if (msg['content'] != null &&
-                            msg['content'].toString().isNotEmpty) ...[
-                          if (msg['imageUrl'] != null)
-                            const SizedBox(height: 8),
-                          RichText(
-                            text: TextSpan(
-                              children: _parseContent(msg['content']!, isMe),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 4),
-                        Align(
-                          alignment: Alignment.bottomRight,
-                          child: Text(
-                            time,
-                            style: TextStyle(
-                              color: isMe ? Colors.white70 : Colors.black54,
-                              fontSize: 10,
-                            ),
+                // Date grouping logic
+                bool showDateHeader = false;
+                if (index == 0) {
+                  showDateHeader = true;
+                } else {
+                  final prevMsg = _messages[index - 1];
+                  final DateTime prevDate = DateTime.parse(
+                    prevMsg['timestamp'],
+                  );
+                  if (messageDate.year != prevDate.year ||
+                      messageDate.month != prevDate.month ||
+                      messageDate.day != prevDate.day) {
+                    showDateHeader = true;
+                  }
+                }
+
+                return Column(
+                  children: [
+                    if (showDateHeader) _buildDateHeader(messageDate),
+                    Align(
+                      alignment: isMe
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isMe
+                              ? const Color(0xFF2575FC)
+                              : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(20).copyWith(
+                            bottomRight: isMe
+                                ? Radius.zero
+                                : const Radius.circular(20),
+                            bottomLeft: isMe
+                                ? const Radius.circular(20)
+                                : Radius.zero,
                           ),
                         ),
-                      ],
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.75,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (msg['imageUrl'] != null &&
+                                msg['imageUrl'].toString().isNotEmpty)
+                              GestureDetector(
+                                onTap: () => _showZoomedImage(msg['imageUrl']),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    ApiService.fixImageUrl(msg['imageUrl'])!,
+                                    width: double.infinity,
+                                    height: 150,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.broken_image),
+                                  ),
+                                ),
+                              ),
+                            if (msg['content'] != null &&
+                                msg['content'].toString().isNotEmpty) ...[
+                              if (msg['imageUrl'] != null)
+                                const SizedBox(height: 8),
+                              RichText(
+                                text: TextSpan(
+                                  children: _parseContent(
+                                    msg['content']!,
+                                    isMe,
+                                  ),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 4),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Text(
+                                time,
+                                style: TextStyle(
+                                  color: isMe ? Colors.white70 : Colors.black54,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 );
               },
             ),
