@@ -9,6 +9,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:quickalert/quickalert.dart';
+import 'package:share_plus/share_plus.dart';
 
 class EventsTab extends StatefulWidget {
   const EventsTab({super.key});
@@ -136,7 +137,7 @@ class _EventsTabState extends State<EventsTab> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(
+                                      AutoSizeText(
                                         DateFormat(
                                           'd',
                                         ).format(DateTime.parse(event['date'])),
@@ -145,8 +146,9 @@ class _EventsTabState extends State<EventsTab> {
                                           fontSize: 18,
                                           color: Theme.of(context).primaryColor,
                                         ),
+                                        maxLines: 1,
                                       ),
-                                      Text(
+                                      AutoSizeText(
                                         DateFormat('MMM')
                                             .format(
                                               DateTime.parse(event['date']),
@@ -157,25 +159,29 @@ class _EventsTabState extends State<EventsTab> {
                                           fontWeight: FontWeight.bold,
                                           color: Theme.of(context).primaryColor,
                                         ),
+                                        maxLines: 1,
                                       ),
                                     ],
                                   ),
                                 ),
-                                title: Text(
+                                title: AutoSizeText(
                                   event['title'],
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const SizedBox(height: 4),
-                                    Text(
+                                    AutoSizeText(
                                       DateFormat.jm().format(
                                         DateTime.parse(event['date']),
                                       ),
+                                      maxLines: 1,
                                     ),
                                     const SizedBox(height: 2),
                                     Row(
@@ -187,12 +193,14 @@ class _EventsTabState extends State<EventsTab> {
                                         ),
                                         const SizedBox(width: 4),
                                         Expanded(
-                                          child: Text(
+                                          child: AutoSizeText(
                                             event['location'],
                                             style: const TextStyle(
                                               color: Colors.grey,
                                             ),
                                             overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                            minFontSize: 10,
                                           ),
                                         ),
                                       ],
@@ -277,6 +285,21 @@ class _EventsTabState extends State<EventsTab> {
                                           );
                                         },
                                       ),
+                                    // Share Button
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.share,
+                                        color: Colors.green,
+                                      ),
+                                      onPressed: () {
+                                        Share.share(
+                                          'Check out this event: ${event['title']}\n'
+                                          'Date: ${DateFormat.yMMMMEEEEd().format(DateTime.parse(event['date']))} at ${DateFormat.jm().format(DateTime.parse(event['date']))}\n'
+                                          'Location: ${event['location']}\n\n'
+                                          '${event['description']}',
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                                 onTap: () {

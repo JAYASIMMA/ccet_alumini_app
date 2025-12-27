@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:quickalert/quickalert.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
@@ -119,17 +120,23 @@ class _JobsScreenState extends State<JobsScreen> {
                                       color: Colors.grey,
                                     ),
                             ),
-                            title: Text(
+                            title: AutoSizeText(
                               job['title'],
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: 4),
-                                Text(job['company']),
+                                AutoSizeText(
+                                  job['company'],
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
@@ -139,10 +146,15 @@ class _JobsScreenState extends State<JobsScreen> {
                                       color: Colors.grey,
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      '${job['location']} • ${job['type']}',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                    Expanded(
+                                      child: AutoSizeText(
+                                        '${job['location']} • ${job['type']}',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                        minFontSize: 10,
                                       ),
                                     ),
                                   ],

@@ -7,6 +7,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 
 class EventViewerScreen extends StatefulWidget {
   final Map<String, dynamic> event;
@@ -60,6 +61,19 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Event Details'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share, color: Colors.white),
+            onPressed: () {
+              Share.share(
+                'Check out this event: ${event['title']}\n'
+                'Date: ${DateFormat.yMMMMEEEEd().format(DateTime.parse(event['date']))} at ${DateFormat.jm().format(DateTime.parse(event['date']))}\n'
+                'Location: ${event['location']}\n\n'
+                '${event['description']}',
+              );
+            },
+          ),
+        ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

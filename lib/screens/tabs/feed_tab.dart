@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:quickalert/quickalert.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 class FeedTab extends StatefulWidget {
   const FeedTab({super.key});
@@ -465,13 +466,16 @@ class _FeedTabState extends State<FeedTab> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(
+                                                AutoSizeText(
                                                   post['authorName'] ??
                                                       'Unknown',
                                                   style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 16,
                                                   ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 if (post['createdAt'] != null)
                                                   Text(
@@ -544,9 +548,12 @@ class _FeedTabState extends State<FeedTab> {
                                           ],
                                         ),
                                         const SizedBox(height: 12),
-                                        Text(
+                                        AutoSizeText(
                                           post['content'] ?? '',
                                           style: const TextStyle(fontSize: 16),
+                                          minFontSize: 12,
+                                          maxLines: 10,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),
