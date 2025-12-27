@@ -347,26 +347,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Center(
                       child: Stack(
                         children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.grey.shade200,
-                            backgroundImage: _imageFile != null
-                                ? FileImage(_imageFile!)
-                                : (_currentUser?.photoURL != null
-                                          ? NetworkImage(
-                                              _currentUser!.photoURL!,
-                                            )
-                                          : null)
-                                      as ImageProvider?,
-                            child:
-                                (_imageFile == null &&
-                                    _currentUser?.photoURL == null)
-                                ? const Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: Colors.grey,
-                                  )
-                                : null,
+                          Builder(
+                            builder: (context) {
+                              final fixedUrl = ApiService.fixImageUrl(
+                                _currentUser?.profileImageUrl,
+                              );
+                              final hasValidUrl =
+                                  fixedUrl != null && fixedUrl.isNotEmpty;
+                              // Prioritize selected file, then network image
+                              final ImageProvider? imageProvider =
+                                  _imageFile != null
+                                  ? FileImage(_imageFile!)
+                                  : (hasValidUrl
+                                        ? NetworkImage(fixedUrl)
+                                        : null);
+
+                              return CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Colors.grey.shade200,
+                                backgroundImage: imageProvider,
+                                onBackgroundImageError: imageProvider != null
+                                    ? (_, __) {}
+                                    : null,
+                                child: (_imageFile == null && !hasValidUrl)
+                                    ? const Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: Colors.grey,
+                                      )
+                                    : null,
+                              );
+                            },
                           ),
                           Positioned(
                             bottom: 0,
