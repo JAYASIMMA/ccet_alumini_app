@@ -9,7 +9,13 @@ import '../home_screen.dart'; // Import HomeScreen
 
 class EditProfileScreen extends StatefulWidget {
   final bool isOnboarding;
-  const EditProfileScreen({super.key, this.isOnboarding = false});
+  final String? selectedRole; // Add this
+
+  const EditProfileScreen({
+    super.key,
+    this.isOnboarding = false,
+    this.selectedRole,
+  });
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -259,6 +265,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             : _permPincodeController.text.trim(),
         'linkedInId': _linkedInIdController.text.trim(),
         'isAlumni': isAlumni,
+        'role': widget.selectedRole ?? _currentUser?.role ?? 'alumni',
+        // Add other new fields to map if controllers added
       };
 
       final response = await ApiService.put(
@@ -411,11 +419,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField('Roll Number', _rollNumberController),
-                    _buildTextField(
-                      'Completed Year (Leave blank if studying)',
-                      _completedYearController,
-                      keyboardType: TextInputType.number,
-                    ),
+                    if (widget.selectedRole == 'student' ||
+                        (_currentUser?.role == 'student')) ...[
+                      // Student Specific Fields
+                      DropdownButtonFormField<String>(
+                        decoration: _inputDecoration('Current Year'),
+                        value: _currentUser
+                            ?.currentYear, // You might need a controller/variable for this if new
+                        items: ['1st Year', '2nd Year', '3rd Year', '4th Year']
+                            .map(
+                              (y) => DropdownMenuItem(value: y, child: Text(y)),
+                            )
+                            .toList(),
+                        onChanged: (val) {
+                          // Handle change (add to state/controller)
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Hide Completed Year, or make it "Expected Graduation"
+                    ] else ...[
+                      // Alumni Specific Fields (keep existing)
+                      _buildTextField(
+                        'Completed Year',
+                        _completedYearController,
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
 
                     GestureDetector(
                       onTap: () => _selectDate(context),
@@ -544,38 +573,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ],
 
-                    _buildSectionHeader('Placement & Career'),
-                    DropdownButtonFormField<String>(
-                      decoration: _inputDecoration('Placed?'),
-                      value: _isPlaced ? 'Yes' : 'No',
-                      items: ['Yes', 'No']
-                          .map(
-                            (v) => DropdownMenuItem(value: v, child: Text(v)),
-                          )
-                          .toList(),
-                      onChanged: (val) => setState(() {
-                        _isPlaced = val == 'Yes';
-                        if (!_isPlaced) _placedIn = null;
-                      }),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_isPlaced)
+                    if (widget.selectedRole == 'alumni' ||
+                        (_currentUser?.role == 'alumni')) ...[
+                      _buildSectionHeader('Placement & Career'),
+                      // ... (Placement fields)
                       DropdownButtonFormField<String>(
-                        decoration: _inputDecoration('Placed In'),
-                        value: _placedIn,
-                        items: _placedInOptions
+                        decoration: _inputDecoration('Placed?'),
+                        value: _isPlaced ? 'Yes' : 'No',
+                        items: ['Yes', 'No']
                             .map(
                               (v) => DropdownMenuItem(value: v, child: Text(v)),
                             )
                             .toList(),
-                        onChanged: (val) => setState(() => _placedIn = val),
+                        onChanged: (val) => setState(() {
+                          _isPlaced = val == 'Yes';
+                          if (!_isPlaced) _placedIn = null;
+                        }),
                       ),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                      'Designation / Course',
-                      _designationController,
-                    ),
-                    _buildTextField('Name of Company', _companyNameController),
+                      // ... rest of placement fields
+                      const SizedBox(height: 16),
+                      if (_isPlaced)
+                        DropdownButtonFormField<String>(
+                          decoration: _inputDecoration('Placed In'),
+                          value: _placedIn,
+                          items: _placedInOptions
+                              .map(
+                                (v) =>
+                                    DropdownMenuItem(value: v, child: Text(v)),
+                              )
+                              .toList(),
+                          onChanged: (val) => setState(() => _placedIn = val),
+                        ),
+                      const SizedBox(height: 16),
+                      _buildTextField('Designation', _designationController),
+                      _buildTextField(
+                        'Name of Company',
+                        _companyNameController,
+                      ),
+                    ],
 
                     const SizedBox(height: 32),
                     SizedBox(

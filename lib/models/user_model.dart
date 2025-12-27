@@ -37,6 +37,9 @@ class UserModel {
   final String? linkedInId;
   final bool isAdmin;
   final bool isAlumni;
+  final String role; // 'alumni', 'student', 'admin'
+  final String? currentYear;
+  final String? semester;
 
   UserModel({
     required this.uid,
@@ -66,6 +69,9 @@ class UserModel {
     this.linkedInId,
     this.isAdmin = false,
     this.isAlumni = false,
+    this.role = 'alumni',
+    this.currentYear,
+    this.semester,
   });
 
   Map<String, dynamic> toMap() {
@@ -97,6 +103,9 @@ class UserModel {
       'linkedInId': linkedInId,
       'isAdmin': isAdmin,
       'isAlumni': isAlumni,
+      'role': role,
+      'currentYear': currentYear,
+      'semester': semester,
     };
   }
 
@@ -132,6 +141,9 @@ class UserModel {
       linkedInId: map['linkedInId'],
       isAdmin: map['isAdmin'] ?? false,
       isAlumni: map['isAlumni'] ?? false,
+      role: map['role'] ?? 'alumni',
+      currentYear: map['currentYear'],
+      semester: map['semester'],
     );
   }
 }

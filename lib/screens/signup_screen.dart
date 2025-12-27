@@ -35,11 +35,13 @@ class _SignupScreenState extends State<SignupScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
       if (success) {
+        // ... (inside class)
+
         final user = _authService.currentUser;
         if (user != null) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const EditProfileScreen(isOnboarding: true),
+              builder: (context) => const RoleSelectionScreen(),
             ),
           );
         }
