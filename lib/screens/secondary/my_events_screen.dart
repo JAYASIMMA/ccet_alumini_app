@@ -7,34 +7,57 @@ import 'package:ccet_alumini_app/widgets/full_screen_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:quickalert/quickalert.dart';
 
-class EventsTab extends StatefulWidget {
-  const EventsTab({super.key});
+class MyEventsScreen extends StatefulWidget {
+  const MyEventsScreen({super.key});
 
   @override
-  State<EventsTab> createState() => _EventsTabState();
+  State<MyEventsScreen> createState() => _MyEventsScreenState();
 }
 
-class _EventsTabState extends State<EventsTab> {
+class _MyEventsScreenState extends State<MyEventsScreen> {
   late Future<List<dynamic>> _eventsFuture;
 
   @override
   void initState() {
     super.initState();
-    _eventsFuture = ApiService.getEvents();
+    _loadMyEvents();
+  }
+
+  void _loadMyEvents() {
+    final user = AuthService().currentUser;
+    // Get all events and filter client-side
+    _eventsFuture = ApiService.getEvents().then((events) {
+      if (user == null) return [];
+      return events.where((event) => event['organizerId'] == user.uid).toList();
+    });
   }
 
   Future<void> _refreshEvents() async {
     setState(() {
-      _eventsFuture = ApiService.getEvents();
+      _loadMyEvents();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Hosted Events'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).colorScheme.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: _eventsFuture,
         builder: (context, snapshot) {
@@ -51,7 +74,7 @@ class _EventsTabState extends State<EventsTab> {
           if (events.isEmpty) {
             return const Center(
               child: Text(
-                'No Upcoming Events',
+                'You haven\'t hosted any events yet',
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
             );
@@ -79,7 +102,7 @@ class _EventsTabState extends State<EventsTab> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // Event Image (if available)
+                              // Event Image
                               if (event['imageUrl'] != null &&
                                   event['imageUrl'].toString().isNotEmpty)
                                 ClipRRect(
@@ -98,7 +121,7 @@ class _EventsTabState extends State<EventsTab> {
                                       );
                                     },
                                     child: Hero(
-                                      tag: 'event-${event['imageUrl']}',
+                                      tag: 'my-event-${event['imageUrl']}',
                                       child: Image.network(
                                         ApiService.fixImageUrl(
                                           event['imageUrl'],
@@ -178,105 +201,75 @@ class _EventsTabState extends State<EventsTab> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.location_on,
-                                          size: 14,
-                                          color: Colors.grey,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: Text(
-                                            event['location'],
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
+                                    Text(
+                                      event['location'],
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                   ],
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // Edit Button
-                                    if (AuthService().currentUser?.isAdmin ==
-                                            true ||
-                                        (AuthService().currentUser?.uid !=
-                                                null &&
-                                            AuthService().currentUser!.uid ==
-                                                event['organizerId']))
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.blue,
-                                        ),
-                                        onPressed: () async {
-                                          final result = await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EditEventScreen(event: event),
-                                            ),
-                                          );
-                                          if (result == true) {
-                                            _refreshEvents();
-                                          }
-                                        },
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.blue,
                                       ),
-                                    // Delete Button
-                                    if (AuthService().currentUser?.isAdmin ==
-                                            true ||
-                                        (AuthService().currentUser?.uid !=
-                                                null &&
-                                            AuthService().currentUser!.uid ==
-                                                event['organizerId']))
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () {
-                                          QuickAlert.show(
-                                            context: context,
-                                            type: QuickAlertType.confirm,
-                                            text:
-                                                'Do you want to delete this event?',
-                                            confirmBtnText: 'Delete',
-                                            cancelBtnText: 'Cancel',
-                                            confirmBtnColor: Colors.red,
-                                            onConfirmBtnTap: () async {
-                                              Navigator.pop(context);
-                                              try {
-                                                await ApiService.deleteEvent(
-                                                  event['_id'],
+                                      onPressed: () async {
+                                        final result = await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EditEventScreen(event: event),
+                                          ),
+                                        );
+                                        if (result == true) {
+                                          _refreshEvents();
+                                        }
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        QuickAlert.show(
+                                          context: context,
+                                          type: QuickAlertType.confirm,
+                                          text: 'Delete this event?',
+                                          confirmBtnText: 'Delete',
+                                          cancelBtnText: 'Cancel',
+                                          confirmBtnColor: Colors.red,
+                                          onConfirmBtnTap: () async {
+                                            Navigator.pop(context);
+                                            try {
+                                              await ApiService.deleteEvent(
+                                                event['_id'],
+                                              );
+                                              _refreshEvents();
+                                              if (context.mounted) {
+                                                QuickAlert.show(
+                                                  context: context,
+                                                  type: QuickAlertType.success,
+                                                  text: 'Deleted successfully!',
                                                 );
-                                                _refreshEvents();
-                                                if (context.mounted) {
-                                                  QuickAlert.show(
-                                                    context: context,
-                                                    type:
-                                                        QuickAlertType.success,
-                                                    text:
-                                                        'Deleted successfully!',
-                                                  );
-                                                }
-                                              } catch (e) {
-                                                if (context.mounted) {
-                                                  QuickAlert.show(
-                                                    context: context,
-                                                    type: QuickAlertType.error,
-                                                    text: 'Error deleting: $e',
-                                                  );
-                                                }
                                               }
-                                            },
-                                          );
-                                        },
-                                      ),
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                QuickAlert.show(
+                                                  context: context,
+                                                  type: QuickAlertType.error,
+                                                  text: 'Error: $e',
+                                                );
+                                              }
+                                            }
+                                          },
+                                        );
+                                      },
+                                    ),
                                   ],
                                 ),
                                 onTap: () {
@@ -301,29 +294,19 @@ class _EventsTabState extends State<EventsTab> {
           );
         },
       ),
-      floatingActionButton:
-          (AuthService().currentUser?.isAdmin == true ||
-              [
-                'alumni',
-                'hod',
-                'faculty',
-              ].contains(AuthService().currentUser?.role))
-          ? FloatingActionButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddEventScreen(),
-                  ),
-                );
-                if (result == true) {
-                  _refreshEvents();
-                }
-              },
-              backgroundColor: Theme.of(context).primaryColor,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddEventScreen()),
+          );
+          if (result == true) {
+            _refreshEvents();
+          }
+        },
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }

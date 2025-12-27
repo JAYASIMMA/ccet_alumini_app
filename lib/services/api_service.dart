@@ -295,6 +295,30 @@ class ApiService {
     }
   }
 
+  static Future<void> updateEvent(String id, Map<String, dynamic> data) async {
+    try {
+      final user = AuthService().currentUser;
+      final headers = {
+        'Content-Type': 'application/json',
+        'x-user-id': user?.uid ?? '',
+        'x-is-admin': (user?.isAdmin == true).toString(),
+      };
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/events/$id'),
+        headers: headers,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update event');
+      }
+    } catch (e) {
+      print('Error updating event: $e');
+      rethrow;
+    }
+  }
+
   // --- Job Methods ---
   static Future<List<dynamic>> getJobs() async {
     try {
