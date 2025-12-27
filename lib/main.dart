@@ -51,6 +51,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final font = themeProvider.fontFamily;
 
     // Light Theme
     final lightTheme = ThemeData(
@@ -58,7 +59,7 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.light,
       primaryColor: const Color(0xFF2575FC), // Blue
       scaffoldBackgroundColor: const Color(0xFFF5F7FA), // Light Grey/White
-      textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
+      textTheme: getFontTheme(font, ThemeData.light().textTheme),
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF2575FC),
         secondary: const Color(0xFF00C6FF), // Light Blue Accent
@@ -84,7 +85,7 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          textStyle: getFontStyle(font, fontWeight: FontWeight.w600),
         ),
       ),
       cardTheme: CardThemeData(
@@ -121,7 +122,8 @@ class MyApp extends StatelessWidget {
       brightness: Brightness.dark,
       primaryColor: const Color(0xFF2575FC),
       scaffoldBackgroundColor: const Color(0xFF121212),
-      textTheme: GoogleFonts.poppinsTextTheme(
+      textTheme: getFontTheme(
+        font,
         ThemeData.dark().textTheme,
       ).apply(bodyColor: Colors.white, displayColor: Colors.white),
       colorScheme: ColorScheme.fromSeed(
@@ -148,7 +150,7 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          textStyle: getFontStyle(font, fontWeight: FontWeight.w600),
         ),
       ),
       cardTheme: CardThemeData(

@@ -126,6 +126,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
+          // Font Selector
+          ListTile(
+            leading: const Icon(Icons.font_download),
+            title: const Text('Font Style'),
+            subtitle: Text(themeProvider.fontFamily),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (BuildContext context) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      ListTile(
+                        title: const Text(
+                          'Poppins (Default)',
+                          style: TextStyle(fontFamily: 'Poppins'),
+                        ),
+                        onTap: () {
+                          themeProvider.setFontFamily('Poppins');
+                          Navigator.pop(context);
+                        },
+                        trailing: themeProvider.fontFamily == 'Poppins'
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
+                      ListTile(
+                        title: const Text(
+                          'Plus Jakarta Sans',
+                          style: TextStyle(fontFamily: 'Plus Jakarta Sans'),
+                        ),
+                        onTap: () {
+                          themeProvider.setFontFamily('Plus Jakarta Sans');
+                          Navigator.pop(context);
+                        },
+                        trailing:
+                            themeProvider.fontFamily == 'Plus Jakarta Sans'
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
+                      ListTile(
+                        title: const Text(
+                          'Satoshi (Style)',
+                          style: TextStyle(fontFamily: 'Outfit'),
+                        ),
+                        subtitle: const Text(
+                          'Using Outfit as Satoshi alternative',
+                        ),
+                        onTap: () {
+                          themeProvider.setFontFamily('Satoshi (Outfit)');
+                          Navigator.pop(context);
+                        },
+                        trailing: themeProvider.fontFamily == 'Satoshi (Outfit)'
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
