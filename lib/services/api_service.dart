@@ -4,11 +4,36 @@ import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class ApiService {
   static String get baseUrl {
     // For physical device, use the machine's LAN IP.
     // Found via ipconfig: 192.168.1.33
     return 'http://192.168.1.33:3000/api';
+  }
+
+  // --- Cache Helpers ---
+  static Future<void> _saveToCache(String key, List<dynamic> data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, jsonEncode(data));
+    } catch (e) {
+      print('Error saving to cache ($key): $e');
+    }
+  }
+
+  static Future<List<dynamic>> _getFromCache(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cachedString = prefs.getString(key);
+      if (cachedString != null) {
+        return jsonDecode(cachedString) as List<dynamic>;
+      }
+    } catch (e) {
+      print('Error reading from cache ($key): $e');
+    }
+    return [];
   }
 
   static String? fixImageUrl(String? url) {
@@ -134,12 +159,16 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getPosts() async {
+    const key = 'posts_cache';
     try {
       final response = await get('/posts');
-      return response as List<dynamic>;
+      final posts = response as List<dynamic>;
+      await _saveToCache(key, posts); // Save to cache
+      return posts;
     } catch (e) {
       print('Error fetching posts: $e');
-      return [];
+      print('Falling back to cache for posts');
+      return await _getFromCache(key);
     }
   }
 
@@ -270,12 +299,16 @@ class ApiService {
 
   // --- Event Methods ---
   static Future<List<dynamic>> getEvents() async {
+    const key = 'events_cache';
     try {
       final response = await get('/events');
-      return response as List<dynamic>;
+      final events = response as List<dynamic>;
+      await _saveToCache(key, events);
+      return events;
     } catch (e) {
       print('Error fetching events: $e');
-      return [];
+      print('Falling back to cache for events');
+      return await _getFromCache(key);
     }
   }
 
@@ -321,12 +354,16 @@ class ApiService {
 
   // --- Job Methods ---
   static Future<List<dynamic>> getJobs() async {
+    const key = 'jobs_cache';
     try {
       final response = await get('/jobs');
-      return response as List<dynamic>;
+      final jobs = response as List<dynamic>;
+      await _saveToCache(key, jobs);
+      return jobs;
     } catch (e) {
       print('Error fetching jobs: $e');
-      return [];
+      print('Falling back to cache for jobs');
+      return await _getFromCache(key);
     }
   }
 
@@ -439,12 +476,16 @@ class ApiService {
 
   // --- News Methods ---
   static Future<List<dynamic>> getNews() async {
+    const key = 'news_cache';
     try {
       final response = await get('/news');
-      return response as List<dynamic>;
+      final news = response as List<dynamic>;
+      await _saveToCache(key, news);
+      return news;
     } catch (e) {
       print('Error fetching news: $e');
-      return [];
+      print('Falling back to cache for news');
+      return await _getFromCache(key);
     }
   }
 
