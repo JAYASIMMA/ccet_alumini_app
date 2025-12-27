@@ -24,6 +24,30 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  TextTheme getFontTheme(String font, TextTheme baseTheme) {
+    switch (font) {
+      case 'Plus Jakarta Sans':
+        return GoogleFonts.plusJakartaSansTextTheme(baseTheme);
+      case 'Satoshi (Outfit)':
+        return GoogleFonts.outfitTextTheme(baseTheme);
+      case 'Poppins':
+      default:
+        return GoogleFonts.poppinsTextTheme(baseTheme);
+    }
+  }
+
+  TextStyle getFontStyle(String font, {FontWeight? fontWeight}) {
+    switch (font) {
+      case 'Plus Jakarta Sans':
+        return GoogleFonts.plusJakartaSans(fontWeight: fontWeight);
+      case 'Satoshi (Outfit)':
+        return GoogleFonts.outfit(fontWeight: fontWeight);
+      case 'Poppins':
+      default:
+        return GoogleFonts.poppins(fontWeight: fontWeight);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
