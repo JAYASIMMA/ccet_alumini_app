@@ -6,8 +6,12 @@ class ThemeProvider with ChangeNotifier {
 
   ThemeMode get themeMode => _themeMode;
 
+  String _fontFamily = 'Poppins';
+  String get fontFamily => _fontFamily;
+
   ThemeProvider() {
     _loadTheme();
+    _loadFont();
   }
 
   void _loadTheme() async {
@@ -25,6 +29,15 @@ class ThemeProvider with ChangeNotifier {
     }
   }
 
+  void _loadFont() async {
+    final prefs = await SharedPreferences.getInstance();
+    final fontString = prefs.getString('fontFamily');
+    if (fontString != null) {
+      _fontFamily = fontString;
+      notifyListeners();
+    }
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
@@ -36,5 +49,12 @@ class ThemeProvider with ChangeNotifier {
       themeString = 'dark';
     }
     await prefs.setString('themeMode', themeString);
+  }
+
+  Future<void> setFontFamily(String font) async {
+    _fontFamily = font;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('fontFamily', font);
   }
 }
