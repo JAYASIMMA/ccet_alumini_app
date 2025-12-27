@@ -8,6 +8,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
 import 'package:quickalert/quickalert.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:share_plus/share_plus.dart';
 
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
@@ -234,9 +235,22 @@ class _JobsScreenState extends State<JobsScreen> {
                                         },
                                       );
                                     },
-                                  )
-                                else
-                                  const Icon(Icons.chevron_right),
+                                  ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.share,
+                                    color: Colors.green,
+                                  ),
+                                  onPressed: () {
+                                    Share.share(
+                                      'Check out this job: ${job['title']}\n'
+                                      'Company: ${job['company']}\n'
+                                      'Location: ${job['location']} (${job['type']})\n\n'
+                                      '${job['description']}\n\n'
+                                      'Apply here: ${job['link']}',
+                                    );
+                                  },
+                                ),
                               ],
                             ),
                             onTap: () {

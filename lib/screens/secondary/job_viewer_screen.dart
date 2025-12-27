@@ -7,6 +7,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class JobViewerScreen extends StatefulWidget {
   final Map<String, dynamic> job;
@@ -63,6 +64,20 @@ class _JobViewerScreenState extends State<JobViewerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(job['title']),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              Share.share(
+                'Check out this job: ${job['title']}\n'
+                'Company: ${job['company']}\n'
+                'Location: ${job['location']} (${job['type']})\n\n'
+                '${job['description']}\n\n'
+                'Apply here: ${job['link']}',
+              );
+            },
+          ),
+        ],
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

@@ -437,7 +437,43 @@ class ApiService {
     }
   }
 
-  // --- Donation Methods ---
+  // --- News Methods ---
+  static Future<List<dynamic>> getNews() async {
+    try {
+      final response = await get('/news');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Error fetching news: $e');
+      return [];
+    }
+  }
+
+  static Future<dynamic> createNews(Map<String, dynamic> data) async {
+    return await post('/news', data);
+  }
+
+  static Future<void> deleteNews(String id) async {
+    try {
+      final user = AuthService().currentUser;
+      final headers = {
+        'x-user-id': user?.uid ?? '',
+        'x-is-admin': (user?.isAdmin == true).toString(),
+      };
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/news/$id'),
+        headers: headers,
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete news');
+      }
+    } catch (e) {
+      print('Error deleting news: $e');
+      rethrow;
+    }
+  }
+
   static Future<List<dynamic>> getCampaigns() async {
     try {
       final response = await get('/donations/campaigns');
