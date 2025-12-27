@@ -2,6 +2,7 @@ import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:quickalert/quickalert.dart';
 import 'dart:io';
 
 class AddPostScreen extends StatefulWidget {
@@ -31,9 +32,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   Future<void> _submitPost() async {
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Content is required')));
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.warning,
+        text: 'Content is required',
+      );
       return;
     }
 
@@ -56,13 +59,20 @@ class _AddPostScreenState extends State<AddPostScreen> {
             : null,
       });
       if (mounted) {
-        Navigator.pop(context, true); // Return true to refresh
+        await QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          text: 'Post created successfully!',
+        );
+        if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          text: 'Error: $e',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

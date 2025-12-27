@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:quickalert/quickalert.dart';
 import 'dart:io';
 
 class AddEventScreen extends StatefulWidget {
@@ -88,13 +89,20 @@ class _AddEventScreenState extends State<AddEventScreen> {
         'attachments': attachments,
       });
       if (mounted) {
-        Navigator.pop(context, true);
+        await QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          text: 'Event created successfully!',
+        );
+        if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          text: 'Error: $e',
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

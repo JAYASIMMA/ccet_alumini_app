@@ -3,7 +3,9 @@ import 'package:ccet_alumini_app/screens/secondary/job_viewer_screen.dart'; // A
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:intl/intl.dart';
+import 'package:quickalert/quickalert.dart';
 
 class JobsScreen extends StatefulWidget {
   const JobsScreen({super.key});
@@ -69,131 +71,143 @@ class _JobsScreenState extends State<JobsScreen> {
 
           return RefreshIndicator(
             onRefresh: _refreshJobs,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: jobs.length,
-              itemBuilder: (context, index) {
-                final job = jobs[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(8),
-                        image:
-                            (job['images'] != null &&
-                                (job['images'] as List).isNotEmpty)
-                            ? DecorationImage(
-                                image: NetworkImage(
-                                  ApiService.fixImageUrl(job['images'][0])!,
-                                ),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child:
-                          (job['images'] != null &&
-                              (job['images'] as List).isNotEmpty)
-                          ? null
-                          : const Icon(
-                              Icons.business_center,
-                              color: Colors.grey,
-                            ),
-                    ),
-                    title: Text(
-                      job['title'],
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(job['company']),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 14,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${job['location']} • ${job['type']}',
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: (AuthService().currentUser?.isAdmin == true)
-                        ? IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete Job'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this job?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(ctx, false),
-                                      child: const Text('Cancel'),
+            child: AnimationLimiter(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: jobs.length,
+                itemBuilder: (context, index) {
+                  final job = jobs[index];
+                  return AnimationConfiguration.staggeredList(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    child: SlideAnimation(
+                      verticalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(8),
+                                image:
+                                    (job['images'] != null &&
+                                        (job['images'] as List).isNotEmpty)
+                                    ? DecorationImage(
+                                        image: NetworkImage(
+                                          ApiService.fixImageUrl(
+                                            job['images'][0],
+                                          )!,
+                                        ),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child:
+                                  (job['images'] != null &&
+                                      (job['images'] as List).isNotEmpty)
+                                  ? null
+                                  : const Icon(
+                                      Icons.business_center,
+                                      color: Colors.grey,
                                     ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
+                            ),
+                            title: Text(
+                              job['title'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Text(job['company']),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.location_on,
+                                      size: 14,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${job['location']} • ${job['type']}',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
                                       ),
                                     ),
                                   ],
                                 ),
+                              ],
+                            ),
+                            trailing:
+                                (AuthService().currentUser?.isAdmin == true)
+                                ? IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () {
+                                      QuickAlert.show(
+                                        context: context,
+                                        type: QuickAlertType.confirm,
+                                        text: 'Do you want to delete this job?',
+                                        confirmBtnText: 'Delete',
+                                        cancelBtnText: 'Cancel',
+                                        confirmBtnColor: Colors.red,
+                                        onConfirmBtnTap: () async {
+                                          Navigator.pop(context);
+                                          try {
+                                            await ApiService.deleteJob(
+                                              job['_id'],
+                                            );
+                                            _refreshJobs();
+                                            if (context.mounted) {
+                                              QuickAlert.show(
+                                                context: context,
+                                                type: QuickAlertType.success,
+                                                text:
+                                                    'Job deleted successfully!',
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              QuickAlert.show(
+                                                context: context,
+                                                type: QuickAlertType.error,
+                                                text: 'Error deleting job: $e',
+                                              );
+                                            }
+                                          }
+                                        },
+                                      );
+                                    },
+                                  )
+                                : const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      JobViewerScreen(job: job),
+                                ),
                               );
-
-                              if (confirm == true) {
-                                try {
-                                  await ApiService.deleteJob(job['_id']);
-                                  _refreshJobs();
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Job deleted'),
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error: $e')),
-                                    );
-                                  }
-                                }
-                              }
                             },
-                          )
-                        : const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => JobViewerScreen(job: job),
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },
