@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:auto_size_text/auto_size_text.dart'; // Re-added if used, or I will remove usages
+
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:ccet_alumini_app/screens/welcome_screen.dart';
 import 'package:ccet_alumini_app/providers/theme_provider.dart'; // Import ThemeProvider

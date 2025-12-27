@@ -351,17 +351,27 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
               itemBuilder: (context, index) {
                 final user = users[index];
                 return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: user['profileImageUrl'] != null
-                        ? NetworkImage(
-                            ApiService.fixImageUrl(user['profileImageUrl']) ??
-                                '',
-                          )
-                        : null,
-                    onBackgroundImageError: (_, __) {},
-                    child: user['profileImageUrl'] == null
-                        ? Text((user['firstName']?[0] ?? 'U').toUpperCase())
-                        : null,
+                  leading: Builder(
+                    builder: (context) {
+                      final fixedUrl = ApiService.fixImageUrl(
+                        user['profileImageUrl'],
+                      );
+                      final hasValidUrl =
+                          fixedUrl != null && fixedUrl.isNotEmpty;
+                      final imageProvider = hasValidUrl
+                          ? NetworkImage(fixedUrl)
+                          : null;
+
+                      return CircleAvatar(
+                        backgroundImage: imageProvider,
+                        onBackgroundImageError: imageProvider != null
+                            ? (_, __) {}
+                            : null,
+                        child: !hasValidUrl
+                            ? Text((user['firstName']?[0] ?? 'U').toUpperCase())
+                            : null,
+                      );
+                    },
                   ),
                   title: Text(
                     '${user['username'] ?? user['firstName']}',

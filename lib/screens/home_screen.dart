@@ -104,35 +104,34 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 accountEmail: Text(user?.email ?? ""),
-                currentAccountPicture: CircleAvatar(
-                  backgroundColor: Theme.of(context).cardColor,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(
-                          ApiService.fixImageUrl(user!.photoURL!) ?? '',
-                        )
-                      : null,
-                  onBackgroundImageError: (_, __) {
-                    // This callback handles the error, preventing a crash.
-                    // The child widget will be displayed instead.
+                currentAccountPicture: Builder(
+                  builder: (context) {
+                    final fixedUrl = ApiService.fixImageUrl(user?.photoURL);
+                    final hasValidUrl = fixedUrl != null && fixedUrl.isNotEmpty;
+                    final imageProvider = hasValidUrl
+                        ? NetworkImage(fixedUrl)
+                        : null;
+
+                    return CircleAvatar(
+                      backgroundColor: Theme.of(context).cardColor,
+                      backgroundImage: imageProvider,
+                      onBackgroundImageError: imageProvider != null
+                          ? (_, __) {}
+                          : null,
+                      child: !hasValidUrl
+                          ? Text(
+                              (user?.displayName ?? "A")
+                                  .substring(0, 1)
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 40.0,
+                                color: Color(0xFF6A11CB),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : null,
+                    );
                   },
-                  child:
-                      user?.photoURL ==
-                          null // Logic change: we can't detect error synchronously to show child,
-                      // but modern CircleAvatar shows child if foreground/background fails?
-                      // Let's rely on standard behavior or use a safer approach if needed.
-                      // Actually, best way in simple Flutter without plugins is keeping it simple or using a builder.
-                      // For now, adding onBackgroundImageError prevents the crash.
-                      ? Text(
-                          (user?.displayName ?? "A")
-                              .substring(0, 1)
-                              .toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 40.0,
-                            color: Color(0xFF6A11CB),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : null,
                 ),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(

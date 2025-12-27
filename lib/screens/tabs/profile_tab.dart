@@ -39,22 +39,30 @@ class _ProfileTabState extends State<ProfileTab> {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Theme.of(context).cardColor,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(
-                          ApiService.fixImageUrl(user!.photoURL!) ?? '',
-                        )
-                      : null,
-                  onBackgroundImageError: (_, __) {},
-                  child: user?.photoURL == null
-                      ? Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Theme.of(context).primaryColor,
-                        )
-                      : null,
+                child: Builder(
+                  builder: (context) {
+                    final fixedUrl = ApiService.fixImageUrl(user?.photoURL);
+                    final hasValidUrl = fixedUrl != null && fixedUrl.isNotEmpty;
+                    final imageProvider = hasValidUrl
+                        ? NetworkImage(fixedUrl)
+                        : null;
+
+                    return CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Theme.of(context).cardColor,
+                      backgroundImage: imageProvider,
+                      onBackgroundImageError: imageProvider != null
+                          ? (_, __) {}
+                          : null,
+                      child: !hasValidUrl
+                          ? Icon(
+                              Icons.person,
+                              size: 50,
+                              color: Theme.of(context).primaryColor,
+                            )
+                          : null,
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
