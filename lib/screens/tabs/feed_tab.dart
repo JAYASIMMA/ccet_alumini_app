@@ -492,7 +492,7 @@ class _FeedTabState extends State<FeedTab> {
       ),
       floatingActionButton:
           (AuthService().currentUser?.isAdmin == true ||
-              AuthService().currentUser?.role == 'alumni')
+              AuthService().currentUser?.role == 'hod')
           ? FloatingActionButton(
               onPressed: () async {
                 final result = await Navigator.push(

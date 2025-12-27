@@ -15,6 +15,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final _contentController = TextEditingController();
   File? _imageFile;
   bool _isLoading = false;
+  bool _autoDelete = false;
+  DateTime? _expirationDate;
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(
@@ -49,6 +51,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
         'authorImage': user.photoURL,
         'content': _contentController.text,
         'imageUrl': imageUrl,
+        'expiresAt': _autoDelete && _expirationDate != null
+            ? _expirationDate!.toIso8601String()
+            : null,
       });
       if (mounted) {
         Navigator.pop(context, true); // Return true to refresh
@@ -131,6 +136,49 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
               maxLines: 5,
             ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Auto-Delete post?'),
+              subtitle: const Text(
+                'Automatically remove this post at a set time',
+              ),
+              value: _autoDelete,
+              onChanged: (val) => setState(() => _autoDelete = val),
+            ),
+            if (_autoDelete)
+              ListTile(
+                title: Text(
+                  _expirationDate == null
+                      ? 'Select Expiration Date & Time'
+                      : 'Expires: ${_expirationDate.toString().split('.')[0]}',
+                ),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null && mounted) {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      setState(() {
+                        _expirationDate = DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                          time.hour,
+                          time.minute,
+                        );
+                      });
+                    }
+                  }
+                },
+              ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
