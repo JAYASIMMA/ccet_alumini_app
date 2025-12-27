@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:ccet_alumini_app/screens/secondary/admin_user_manage_screen.dart';
 import '../../services/auth_service.dart';
+import '../../services/api_service.dart';
 import '../secondary/edit_profile_screen.dart';
 
 class ProfileTab extends StatefulWidget {
@@ -40,10 +41,13 @@ class _ProfileTabState extends State<ProfileTab> {
                 ),
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).cardColor,
                   backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
+                      ? NetworkImage(
+                          ApiService.fixImageUrl(user!.photoURL!) ?? '',
+                        )
                       : null,
+                  onBackgroundImageError: (_, __) {},
                   child: user?.photoURL == null
                       ? Icon(
                           Icons.person,

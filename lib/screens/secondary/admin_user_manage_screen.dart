@@ -353,8 +353,12 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundImage: user['profileImageUrl'] != null
-                        ? NetworkImage(user['profileImageUrl'])
+                        ? NetworkImage(
+                            ApiService.fixImageUrl(user['profileImageUrl']) ??
+                                '',
+                          )
                         : null,
+                    onBackgroundImageError: (_, __) {},
                     child: user['profileImageUrl'] == null
                         ? Text((user['firstName']?[0] ?? 'U').toUpperCase())
                         : null,

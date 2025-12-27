@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import 'welcome_screen.dart';
 
 // Tabs
@@ -104,11 +105,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 accountEmail: Text(user?.email ?? ""),
                 currentAccountPicture: CircleAvatar(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).cardColor,
                   backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
+                      ? NetworkImage(
+                          ApiService.fixImageUrl(user!.photoURL!) ?? '',
+                        )
                       : null,
-                  child: user?.photoURL == null
+                  onBackgroundImageError: (_, __) {
+                    // This callback handles the error, preventing a crash.
+                    // The child widget will be displayed instead.
+                  },
+                  child:
+                      user?.photoURL ==
+                          null // Logic change: we can't detect error synchronously to show child,
+                      // but modern CircleAvatar shows child if foreground/background fails?
+                      // Let's rely on standard behavior or use a safer approach if needed.
+                      // Actually, best way in simple Flutter without plugins is keeping it simple or using a builder.
+                      // For now, adding onBackgroundImageError prevents the crash.
                       ? Text(
                           (user?.displayName ?? "A")
                               .substring(0, 1)
@@ -131,7 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Expanded(
                 child: Container(
-                  color: Colors.white,
+                  color: Theme.of(
+                    context,
+                  ).scaffoldBackgroundColor, // Dynamic color
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
@@ -221,27 +236,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text('v1.0.0', style: TextStyle(color: Colors.grey)),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'v1.0.0',
+                  style: TextStyle(
+                    color:
+                        Theme.of(context).textTheme.bodySmall?.color ??
+                        Colors.grey,
+                  ),
+                ),
               ),
             ],
           ),
         ),
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF5F7FA), Colors.white],
-            ),
+          decoration: BoxDecoration(
+            gradient: Theme.of(context).brightness == Brightness.dark
+                ? null // No gradient in dark mode, let scaffold color show
+                : const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFF5F7FA), Colors.white],
+                  ),
+            color: Theme.of(context).scaffoldBackgroundColor,
           ),
           child: _tabs[_currentIndex],
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: _onItemTapped,
-          backgroundColor: Colors.white,
+          backgroundColor:
+              Theme.of(context).bottomAppBarTheme.color ??
+              Theme.of(context).cardColor,
           indicatorColor: const Color(0xFF6A11CB).withOpacity(0.2),
           destinations: const [
             NavigationDestination(

@@ -10,6 +10,14 @@ class ApiService {
     return 'http://192.168.1.33:3000/api';
   }
 
+  static String? fixImageUrl(String? url) {
+    if (url == null) return null;
+    if (url.contains('localhost')) {
+      return url.replaceFirst('localhost', '192.168.1.33');
+    }
+    return url;
+  }
+
   static Future<Map<String, dynamic>> post(
     String endpoint,
     Map<String, dynamic> data,
