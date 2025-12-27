@@ -170,6 +170,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () =>
                               _navigateTo(const AdminUserManagementScreen()),
                         ),
+                      if (user?.role == 'hod')
+                        ListTile(
+                          leading: const Icon(
+                            Icons.people_alt,
+                            color: Color(0xFF6A11CB),
+                          ),
+                          title: const Text('Department Users'),
+                          onTap: () {
+                            Navigator.pop(context); // Close drawer
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AdminUserManagementScreen(
+                                  restrictedDepartment: user?.department,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       const Divider(),
                       ListTile(
                         leading: const Icon(Icons.settings, color: Colors.grey),

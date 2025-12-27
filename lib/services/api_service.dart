@@ -267,9 +267,13 @@ class ApiService {
   }
 
   // --- Admin User Management ---
-  static Future<List<dynamic>> getAllUsers() async {
+  static Future<List<dynamic>> getAllUsers({String? department}) async {
     try {
-      final response = await get('/user/all');
+      String endpoint = '/user/all';
+      if (department != null && department.isNotEmpty) {
+        endpoint += '?department=$department';
+      }
+      final response = await get(endpoint);
       return response as List<dynamic>;
     } catch (e) {
       return [];

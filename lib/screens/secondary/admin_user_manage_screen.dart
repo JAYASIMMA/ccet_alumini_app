@@ -2,7 +2,9 @@ import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 
 class AdminUserManagementScreen extends StatefulWidget {
-  const AdminUserManagementScreen({super.key});
+  final String? restrictedDepartment;
+
+  const AdminUserManagementScreen({super.key, this.restrictedDepartment});
 
   @override
   State<AdminUserManagementScreen> createState() =>
@@ -16,12 +18,16 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
   @override
   void initState() {
     super.initState();
-    _usersFuture = ApiService.getAllUsers();
+    _usersFuture = ApiService.getAllUsers(
+      department: widget.restrictedDepartment,
+    );
   }
 
   Future<void> _refreshUsers() async {
     setState(() {
-      _usersFuture = ApiService.getAllUsers();
+      _usersFuture = ApiService.getAllUsers(
+        department: widget.restrictedDepartment,
+      );
     });
   }
 
@@ -73,9 +79,14 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     final usernameController = TextEditingController(text: user?['username']);
     final emailController = TextEditingController(text: user?['email']);
     final passwordController = TextEditingController(text: user?['password']);
-    final departmentController = TextEditingController(
-      text: user?['department'] ?? 'CSE',
-    );
+
+    // Auto-fill department if restricted (HOD)
+    final initialDept = widget.restrictedDepartment != null
+        ? widget.restrictedDepartment
+        : (user?['department'] ?? 'CSE');
+
+    final departmentController = TextEditingController(text: initialDept);
+
     final completedYearController = TextEditingController(
       text: user?['completedYear'],
     );
@@ -105,6 +116,13 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     value: role,
                     decoration: const InputDecoration(labelText: 'Role'),
                     items: ['student', 'alumni', 'admin', 'hod', 'faculty']
+                        .where((r) {
+                          // If HOD, remove 'admin' and 'hod' from choices (can't create other HODs/Admins)
+                          if (widget.restrictedDepartment != null) {
+                            return r != 'admin' && r != 'hod';
+                          }
+                          return true;
+                        })
                         .map(
                           (r) => DropdownMenuItem(
                             value: r,
@@ -154,6 +172,8 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                   TextField(
                     controller: departmentController,
                     decoration: const InputDecoration(labelText: 'Department'),
+                    enabled:
+                        widget.restrictedDepartment == null, // Disable if HOD
                   ),
                   if (role == 'student') ...[
                     const SizedBox(height: 12),
