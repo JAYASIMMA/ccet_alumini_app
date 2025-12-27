@@ -1,4 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:ccet_alumini_app/screens/secondary/admin_user_manage_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/chat_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/add_post_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/jobs_screen.dart';
@@ -268,6 +269,21 @@ class _FeedTabState extends State<FeedTab> {
                               ),
                             ),
                           ),
+                          if (AuthService().currentUser?.isAdmin == true ||
+                              AuthService().currentUser?.role == 'hod')
+                            _buildGridCard(
+                              context,
+                              "Manage Users",
+                              Icons.manage_accounts_outlined,
+                              Colors.redAccent,
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AdminUserManagementScreen(),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 24),
