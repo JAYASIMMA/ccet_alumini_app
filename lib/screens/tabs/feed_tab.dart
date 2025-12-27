@@ -14,6 +14,7 @@ class FeedTab extends StatefulWidget {
 
 class _FeedTabState extends State<FeedTab> {
   late Future<List<dynamic>> _postsFuture;
+  int _current = 0;
 
   @override
   void initState() {
@@ -54,7 +55,7 @@ class _FeedTabState extends State<FeedTab> {
                     children: [
                       CarouselSlider(
                         options: CarouselOptions(
-                          height: 180.0,
+                          height: 200.0,
                           autoPlay: true,
                           enlargeCenterPage: true,
                           aspectRatio: 16 / 9,
@@ -63,7 +64,13 @@ class _FeedTabState extends State<FeedTab> {
                           autoPlayAnimationDuration: const Duration(
                             milliseconds: 800,
                           ),
-                          viewportFraction: 0.8,
+                          viewportFraction: 0.85,
+                          enlargeFactor: 0.3,
+                          onPageChanged: (index, reason) {
+                            setState(() {
+                              _current = index;
+                            });
+                          },
                         ),
                         items:
                             [
@@ -83,7 +90,15 @@ class _FeedTabState extends State<FeedTab> {
                                       horizontal: 5.0,
                                     ),
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.2),
+                                          spreadRadius: 2,
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                                       image: DecorationImage(
                                         image: AssetImage(i),
                                         fit: BoxFit.cover,
@@ -91,6 +106,40 @@ class _FeedTabState extends State<FeedTab> {
                                     ),
                                   );
                                 },
+                              );
+                            }).toList(),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children:
+                            [
+                              'assets/images/banner_1.png',
+                              'assets/images/banner_2.png',
+                              'assets/images/banner_3.png',
+                              'assets/images/banner_4.png',
+                              'assets/images/banner_5.png',
+                              'assets/images/banner_6.png',
+                              'assets/images/banner_7.png',
+                            ].asMap().entries.map((entry) {
+                              return Container(
+                                width: _current == entry.key ? 12.0 : 8.0,
+                                height: 8.0,
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 8.0,
+                                  horizontal: 4.0,
+                                ),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color:
+                                      (Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white
+                                              : Theme.of(context).primaryColor)
+                                          .withOpacity(
+                                            _current == entry.key ? 0.9 : 0.4,
+                                          ),
+                                ),
                               );
                             }).toList(),
                       ),
