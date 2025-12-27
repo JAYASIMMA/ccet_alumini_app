@@ -462,9 +462,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         ? NetworkImage(fixedUrl)
                                         : null);
 
+                              final isDark =
+                                  Theme.of(context).brightness ==
+                                  Brightness.dark;
                               return CircleAvatar(
                                 radius: 60,
-                                backgroundColor: Colors.grey.shade200,
+                                backgroundColor: isDark
+                                    ? Colors.grey.shade800
+                                    : Colors.grey.shade200,
                                 backgroundImage: imageProvider,
                                 onBackgroundImageError: imageProvider != null
                                     ? (_, __) {}
@@ -575,7 +580,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -674,7 +679,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[700],
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -776,11 +781,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   InputDecoration _inputDecoration(String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
       labelText: label,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
-      fillColor: Colors.grey.shade50,
+      fillColor: isDark ? Colors.grey[800] : Colors.grey.shade50,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }

@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   final List<String> _titles = const [
-    'CCET Alumni Feed',
+    'Chettinad Tech Alumni Feed',
     'Events',
     'Directory',
     'Profile',

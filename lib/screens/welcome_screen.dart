@@ -78,7 +78,7 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child: Image.asset(
-                            'assets/images/logo.jpg',
+                            'assets/images/logo.png',
                             width: 64,
                             height: 64,
                             fit: BoxFit.cover,
@@ -87,7 +87,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       AutoSizeText(
-                        'CCET Alumni',
+                        'Chettinad Tech Alumni',
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               color: Colors.white,
