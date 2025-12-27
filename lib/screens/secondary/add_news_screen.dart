@@ -84,7 +84,7 @@ class _AddNewsScreenState extends State<AddNewsScreen> {
         'department': _departmentController.text.trim().isNotEmpty
             ? _departmentController.text.trim()
             : 'General',
-        'author': currentUser.uid,
+        'author': currentUser.id, // Use MongoDB _id
         if (imageUrl != null) 'image': imageUrl,
         if (links.isNotEmpty) 'links': links,
       };

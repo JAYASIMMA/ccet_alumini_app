@@ -1,4 +1,5 @@
 class UserModel {
+  final String? id; // MongoDB _id
   final String uid;
   final String username;
   final String email;
@@ -44,6 +45,7 @@ class UserModel {
   final String? semester;
 
   UserModel({
+    this.id,
     required this.uid,
     required this.username,
     required this.email,
@@ -80,6 +82,7 @@ class UserModel {
 
   Map<String, dynamic> toMap() {
     return {
+      if (id != null) '_id': id,
       'uid': uid,
       'username': username,
       'email': email,
@@ -117,6 +120,7 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
+      id: map['_id'],
       uid: map['uid'] ?? '',
       username: map['username'] ?? '',
       email: map['email'] ?? '',
