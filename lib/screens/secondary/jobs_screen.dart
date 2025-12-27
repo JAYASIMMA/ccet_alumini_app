@@ -249,206 +249,233 @@ class _JobsScreenState extends State<JobsScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.all(16),
-                                  leading: Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(8),
-                                      image:
-                                          (job['images'] != null &&
-                                              (job['images'] as List)
-                                                  .isNotEmpty)
-                                          ? DecorationImage(
-                                              image: NetworkImage(
-                                                ApiService.fixImageUrl(
-                                                  job['images'][0],
-                                                )!,
-                                              ),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : null,
-                                    ),
-                                    child:
-                                        (job['images'] != null &&
-                                            (job['images'] as List).isNotEmpty)
-                                        ? null
-                                        : const Icon(
-                                            Icons.business_center,
-                                            color: Colors.grey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      contentPadding: const EdgeInsets.all(16),
+                                      leading: Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
-                                  ),
-                                  title: AutoSizeText(
-                                    job['title'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 4),
-                                      AutoSizeText(
-                                        job['company'],
+                                          image:
+                                              (job['images'] != null &&
+                                                  (job['images'] as List)
+                                                      .isNotEmpty)
+                                              ? DecorationImage(
+                                                  image: NetworkImage(
+                                                    ApiService.fixImageUrl(
+                                                      job['images'][0],
+                                                    )!,
+                                                  ),
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : null,
+                                        ),
+                                        child:
+                                            (job['images'] != null &&
+                                                (job['images'] as List)
+                                                    .isNotEmpty)
+                                            ? null
+                                            : const Icon(
+                                                Icons.business_center,
+                                                color: Colors.grey,
+                                              ),
+                                      ),
+                                      title: AutoSizeText(
+                                        job['title'],
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 4),
-                                      Row(
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.location_on,
-                                            size: 14,
-                                            color: Colors.grey,
+                                          const SizedBox(height: 4),
+                                          AutoSizeText(
+                                            job['company'],
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(width: 4),
-                                          Expanded(
-                                            child: AutoSizeText(
-                                              '${job['location']} • ${job['type']}',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade600,
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.location_on,
+                                                size: 14,
+                                                color: Colors.grey,
                                               ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                              minFontSize: 10,
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: AutoSizeText(
+                                                  '${job['location']} • ${job['type']}',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  minFontSize: 10,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (job['createdAt'] != null) ...[
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.access_time,
+                                                  size: 14,
+                                                  color: Colors.grey.shade500,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Posted ${timeago.format(DateTime.parse(job['createdAt']))}',
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade500,
+                                                    fontSize: 12,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
+                                          ],
+                                        ],
+                                      ),
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                JobViewerScreen(job: job),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 8.0,
+                                        bottom: 8.0,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          // Edit Button (Visible to Admin or Owner)
+                                          if (AuthService()
+                                                      .currentUser
+                                                      ?.isAdmin ==
+                                                  true ||
+                                              (AuthService().currentUser?.uid !=
+                                                      null &&
+                                                  AuthService()
+                                                          .currentUser!
+                                                          .uid ==
+                                                      job['postedBy']))
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.edit,
+                                                color: Colors.blue,
+                                              ),
+                                              onPressed: () async {
+                                                final result =
+                                                    await Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            EditJobScreen(
+                                                              job: job,
+                                                            ),
+                                                      ),
+                                                    );
+                                                if (result == true) {
+                                                  _refreshJobs();
+                                                }
+                                              },
+                                            ),
+                                          // Delete Button (Visible to Admin or Owner)
+                                          if (AuthService()
+                                                      .currentUser
+                                                      ?.isAdmin ==
+                                                  true ||
+                                              (AuthService().currentUser?.uid !=
+                                                      null &&
+                                                  AuthService()
+                                                          .currentUser!
+                                                          .uid ==
+                                                      job['postedBy']))
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: Colors.red,
+                                              ),
+                                              onPressed: () {
+                                                QuickAlert.show(
+                                                  context: context,
+                                                  type: QuickAlertType.confirm,
+                                                  text:
+                                                      'Do you want to delete this job?',
+                                                  confirmBtnText: 'Delete',
+                                                  cancelBtnText: 'Cancel',
+                                                  confirmBtnColor: Colors.red,
+                                                  onConfirmBtnTap: () async {
+                                                    Navigator.pop(context);
+                                                    try {
+                                                      await ApiService.deleteJob(
+                                                        job['_id'],
+                                                      );
+                                                      _refreshJobs();
+                                                      if (context.mounted) {
+                                                        QuickAlert.show(
+                                                          context: context,
+                                                          type: QuickAlertType
+                                                              .success,
+                                                          text:
+                                                              'Job deleted successfully!',
+                                                        );
+                                                      }
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        QuickAlert.show(
+                                                          context: context,
+                                                          type: QuickAlertType
+                                                              .error,
+                                                          text:
+                                                              'Error deleting job: $e',
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                                );
+                                              },
+                                            ),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.share,
+                                              color: Colors.green,
+                                            ),
+                                            onPressed: () {
+                                              Share.share(
+                                                'Check out this job: ${job['title']}\n'
+                                                'Company: ${job['company']}\n'
+                                                'Location: ${job['location']} (${job['type']})\n\n'
+                                                '${job['description']}\n\n'
+                                                'Apply here: ${job['link']}',
+                                              );
+                                            },
                                           ),
                                         ],
                                       ),
-                                      if (job['createdAt'] != null) ...[
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.access_time,
-                                              size: 14,
-                                              color: Colors.grey.shade500,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Posted ${timeago.format(DateTime.parse(job['createdAt']))}',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade500,
-                                                fontSize: 12,
-                                                fontStyle: FontStyle.italic,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Edit Button (Visible to Admin or Owner)
-                                      if (AuthService().currentUser?.isAdmin ==
-                                              true ||
-                                          (AuthService().currentUser?.uid !=
-                                                  null &&
-                                              AuthService().currentUser!.uid ==
-                                                  job['postedBy']))
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.edit,
-                                            color: Colors.blue,
-                                          ),
-                                          onPressed: () async {
-                                            final result = await Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    EditJobScreen(job: job),
-                                              ),
-                                            );
-                                            if (result == true) {
-                                              _refreshJobs();
-                                            }
-                                          },
-                                        ),
-                                      // Delete Button (Visible to Admin or Owner)
-                                      if (AuthService().currentUser?.isAdmin ==
-                                              true ||
-                                          (AuthService().currentUser?.uid !=
-                                                  null &&
-                                              AuthService().currentUser!.uid ==
-                                                  job['postedBy']))
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                          ),
-                                          onPressed: () {
-                                            QuickAlert.show(
-                                              context: context,
-                                              type: QuickAlertType.confirm,
-                                              text:
-                                                  'Do you want to delete this job?',
-                                              confirmBtnText: 'Delete',
-                                              cancelBtnText: 'Cancel',
-                                              confirmBtnColor: Colors.red,
-                                              onConfirmBtnTap: () async {
-                                                Navigator.pop(context);
-                                                try {
-                                                  await ApiService.deleteJob(
-                                                    job['_id'],
-                                                  );
-                                                  _refreshJobs();
-                                                  if (context.mounted) {
-                                                    QuickAlert.show(
-                                                      context: context,
-                                                      type: QuickAlertType
-                                                          .success,
-                                                      text:
-                                                          'Job deleted successfully!',
-                                                    );
-                                                  }
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    QuickAlert.show(
-                                                      context: context,
-                                                      type:
-                                                          QuickAlertType.error,
-                                                      text:
-                                                          'Error deleting job: $e',
-                                                    );
-                                                  }
-                                                }
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.share,
-                                          color: Colors.green,
-                                        ),
-                                        onPressed: () {
-                                          Share.share(
-                                            'Check out this job: ${job['title']}\n'
-                                            'Company: ${job['company']}\n'
-                                            'Location: ${job['location']} (${job['type']})\n\n'
-                                            '${job['description']}\n\n'
-                                            'Apply here: ${job['link']}',
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            JobViewerScreen(job: job),
-                                      ),
-                                    );
-                                  },
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
