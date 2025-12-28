@@ -18,6 +18,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   bool _isLoading = false;
   bool _autoDelete = false;
   DateTime? _expirationDate;
+  String? _selectedClub;
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(
@@ -57,6 +58,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
         'expiresAt': _autoDelete && _expirationDate != null
             ? _expirationDate!.toIso8601String()
             : null,
+        'club': _selectedClub,
       });
       if (mounted) {
         await QuickAlert.show(
@@ -145,6 +147,28 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 alignLabelWithHint: true,
               ),
               maxLines: 5,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(
+                labelText: 'Post to Club (Optional)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.groups),
+              ),
+              value: _selectedClub,
+              items: [
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('None (General Post)'),
+                ),
+                const DropdownMenuItem(value: 'NSS', child: Text('NSS')),
+                const DropdownMenuItem(value: 'LEO', child: Text('LEO Club')),
+                const DropdownMenuItem(
+                  value: 'Rotary',
+                  child: Text('Rotary Club'),
+                ),
+              ],
+              onChanged: (val) => setState(() => _selectedClub = val),
             ),
             const SizedBox(height: 16),
             SwitchListTile(

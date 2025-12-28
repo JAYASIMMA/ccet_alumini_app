@@ -1,3 +1,4 @@
+import 'package:ccet_alumini_app/screens/secondary/club_detail_screen.dart';
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -160,6 +161,15 @@ class _DonationScreenState extends State<DonationScreen> {
 
             const SizedBox(height: 24),
             const AutoSizeText(
+              'College Clubs',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              maxLines: 1,
+            ),
+            const SizedBox(height: 12),
+            _buildClubGrid(context),
+
+            const SizedBox(height: 24),
+            const AutoSizeText(
               'My Donation History',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               maxLines: 1,
@@ -279,6 +289,88 @@ class _DonationScreenState extends State<DonationScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildClubGrid(BuildContext context) {
+    final clubs = [
+      {
+        'name': 'NSS',
+        'desc':
+            'Not Me But You. Empowering youth through social service and community development.',
+        'color': Colors.blue.shade700,
+        'icon': Icons.volunteer_activism,
+      },
+      {
+        'name': 'LEO Club',
+        'desc':
+            'Leadership, Experience, Opportunity. Developing young leaders through service.',
+        'color': Colors.orange.shade800,
+        'icon': Icons.star,
+      },
+      {
+        'name': 'Rotary Club',
+        'desc':
+            'Service Above Self. Connecting world leaders to tackle humanity\'s challenges.',
+        'color': Colors.indigo.shade900,
+        'icon': Icons.public,
+      },
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: clubs.length,
+      itemBuilder: (context, index) {
+        final club = clubs[index];
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ClubDetailScreen(
+                  clubName: club['name'] as String,
+                  description: club['desc'] as String,
+                  themeColor: club['color'] as Color,
+                ),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: (club['color'] as Color).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: (club['color'] as Color).withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  club['icon'] as IconData,
+                  color: club['color'] as Color,
+                  size: 32,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  club['name'] as String,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: club['color'] as Color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

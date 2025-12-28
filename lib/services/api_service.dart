@@ -10,7 +10,7 @@ class ApiService {
   static String get baseUrl {
     // For physical device, use the machine's LAN IP.
     // Found via ipconfig: 192.168.1.34
-    return 'http://192.168.1.34:3000/api';
+    return 'http://10.94.90.199:3000/api';
   }
 
   // --- Cache Helpers ---
@@ -158,10 +158,11 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getPosts() async {
-    const key = 'posts_cache';
+  static Future<List<dynamic>> getPosts({String? club}) async {
+    final key = club != null ? 'posts_cache_$club' : 'posts_cache';
     try {
-      final response = await get('/posts');
+      final endpoint = club != null ? '/posts?club=$club' : '/posts';
+      final response = await get(endpoint);
       final posts = response as List<dynamic>;
       await _saveToCache(key, posts); // Save to cache
       return posts;
