@@ -90,22 +90,27 @@ class _DirectoryTabState extends State<DirectoryTab> {
                 separatorBuilder: (context, index) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final user = users[index];
-                  final displayName = user['displayName'] ?? 'Alumni';
+                  final firstName = user['firstName'] ?? '';
+                  final lastName = user['lastName'] ?? '';
+                  final displayName = '$firstName $lastName'.trim();
+                  final fullName = displayName.isEmpty
+                      ? (user['displayName'] ?? 'Alumni')
+                      : displayName;
                   final targetUid = user['uid'];
 
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
                       child: Text(
-                        displayName[0].toUpperCase(),
+                        fullName[0].toUpperCase(),
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
                     title: Text(
-                      displayName,
+                      fullName,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(user['email'] ?? ''),
+                    subtitle: Text(user['department'] ?? user['email'] ?? ''),
                     trailing: FutureBuilder<Map<String, dynamic>>(
                       future: ApiService.checkConnectionStatus(
                         _currentUid,
@@ -128,7 +133,7 @@ class _DirectoryTabState extends State<DirectoryTab> {
                                 MaterialPageRoute(
                                   builder: (context) => ChatDetailScreen(
                                     targetUid: targetUid,
-                                    targetName: displayName,
+                                    targetName: fullName,
                                   ),
                                 ),
                               );
