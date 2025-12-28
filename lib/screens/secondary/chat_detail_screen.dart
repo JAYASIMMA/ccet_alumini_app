@@ -54,10 +54,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _currentUid,
       widget.targetUid,
     );
-    // Mark incoming messages as read
-    // We do this if there are messages and the last one from them is not read?
-    // Or simpler: just call mark read every time we fetch.
-    if (messages.isNotEmpty) {
+    // Mark incoming messages as read only if there are unread ones
+    final hasUnread = messages.any(
+      (m) => m['sender'] == widget.targetUid && m['readStatus'] != true,
+    );
+
+    if (hasUnread) {
       await ApiService.markMessagesAsRead(_currentUid, widget.targetUid);
     }
 
@@ -97,6 +99,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
@@ -131,6 +134,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
@@ -278,7 +282,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   final prevMsg = _messages[index - 1];
                   final DateTime prevDate = DateTime.parse(
                     prevMsg['timestamp'],
-                  );
+                  ).toLocal();
                   if (messageDate.year != prevDate.year ||
                       messageDate.month != prevDate.month ||
                       messageDate.day != prevDate.day) {
@@ -320,7 +324,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.75,
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: isMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (msg['imageUrl'] != null &&
@@ -348,22 +354,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                 msg['content'].toString().isNotEmpty)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 4),
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: RichText(
-                                    text: TextSpan(
-                                      children: _parseContent(
-                                        msg['content']!,
-                                        isMe,
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: isMe
-                                            ? Colors.white
-                                            : (isDark
-                                                  ? Colors.white
-                                                  : Colors.black87),
-                                      ),
+                                child: RichText(
+                                  text: TextSpan(
+                                    children: _parseContent(
+                                      msg['content']!,
+                                      isMe,
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isMe
+                                          ? Colors.white
+                                          : (isDark
+                                                ? Colors.white
+                                                : Colors.black87),
                                     ),
                                   ),
                                 ),
@@ -387,7 +390,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   Icon(
                                     isRead ? Icons.done_all : Icons.done,
                                     size: 15,
-                                    color: Colors.white,
+                                    color: isRead
+                                        ? Colors.lightBlueAccent
+                                        : Colors.white, // Blue tick for read
                                   ),
                                 ],
                               ],
@@ -402,7 +407,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 10,
+              bottom:
+                  45, // Increased bottom padding to lift input area significantly
+            ),
             color: Theme.of(context).scaffoldBackgroundColor,
             child: Row(
               children: [
