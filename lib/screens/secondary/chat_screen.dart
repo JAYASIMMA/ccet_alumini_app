@@ -90,8 +90,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       ...snapshot.data!.map((req) {
                         final user = req['requesterUser'];
-                        final name = user?['displayName'] ?? 'Unknown User';
+                        final firstName = user?['firstName'] ?? '';
+                        final lastName = user?['lastName'] ?? '';
+                        final name = '$firstName $lastName'.trim().isEmpty
+                            ? (user?['username'] ?? 'Unknown User')
+                            : '$firstName $lastName'.trim();
                         final connectionId = req['_id'];
+                        final imageUrl = user?['profileImageUrl'];
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -100,7 +105,14 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
-                              child: Text(name[0].toUpperCase()),
+                              backgroundImage: imageUrl != null
+                                  ? NetworkImage(
+                                      ApiService.fixImageUrl(imageUrl)!,
+                                    )
+                                  : null,
+                              child: imageUrl == null
+                                  ? Text(name[0].toUpperCase())
+                                  : null,
                             ),
                             title: Text(name),
                             subtitle: const Text('Wants to connect'),
@@ -194,13 +206,25 @@ class _ChatScreenState extends State<ChatScreen> {
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
                           final user = snapshot.data![index];
-                          final name = user['displayName'] ?? 'Alumni';
+                          final firstName = user['firstName'] ?? '';
+                          final lastName = user['lastName'] ?? '';
+                          final name = '$firstName $lastName'.trim().isEmpty
+                              ? (user['username'] ?? 'Alumni')
+                              : '$firstName $lastName'.trim();
                           final uid = user['uid'];
+                          final imageUrl = user['profileImageUrl'];
 
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: Colors.blue.shade100,
-                              child: Text(name[0].toUpperCase()),
+                              backgroundImage: imageUrl != null
+                                  ? NetworkImage(
+                                      ApiService.fixImageUrl(imageUrl)!,
+                                    )
+                                  : null,
+                              child: imageUrl == null
+                                  ? Text(name[0].toUpperCase())
+                                  : null,
                             ),
                             title: Text(name),
                             subtitle: const Text('Tap to chat'),
