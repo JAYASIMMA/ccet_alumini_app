@@ -232,12 +232,14 @@ class ApiService {
     String recipient,
     String? content, {
     String? imageUrl,
+    String? audioUrl,
   }) async {
     await post('/messages/send', {
       'sender': sender,
       'recipient': recipient,
       'content': content,
       'imageUrl': imageUrl,
+      'audioUrl': audioUrl,
     });
   }
 
@@ -264,6 +266,36 @@ class ApiService {
   // --- Upload Methods ---
   static Future<String?> uploadContentImage(File file) async {
     return await uploadFile(file);
+  }
+
+  static Future<String?> uploadAudio(File file) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/upload'),
+      );
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+          contentType: MediaType('audio', 'm4a'), // Adjust if needed
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['fileUrl'];
+      } else {
+        print('Audio Upload Failed: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error uploading audio: $e');
+      return null;
+    }
   }
 
   static Future<String?> uploadDocument(File file) async {
