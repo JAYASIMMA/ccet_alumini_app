@@ -54,12 +54,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _currentUid,
       widget.targetUid,
     );
+    // Mark incoming messages as read
+    // We do this if there are messages and the last one from them is not read?
+    // Or simpler: just call mark read every time we fetch.
+    if (messages.isNotEmpty) {
+      await ApiService.markMessagesAsRead(_currentUid, widget.targetUid);
+    }
+
     if (mounted) {
       setState(() {
         _messages = messages;
       });
-      // Optional: Scroll to bottom if new message?
-      // For now, let's just keep it simple.
     }
   }
 
@@ -136,6 +141,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   List<InlineSpan> _parseContent(String text, bool isMe) {
     final List<InlineSpan> spans = [];
     final urlRegExp = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     int start = 0;
     urlRegExp.allMatches(text).forEach((match) {
@@ -143,7 +149,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         spans.add(
           TextSpan(
             text: text.substring(start, match.start),
-            style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+            style: TextStyle(
+              color: isMe
+                  ? Colors.white
+                  : (isDark ? Colors.white : Colors.black87),
+            ),
           ),
         );
       }
@@ -157,9 +167,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             onTap: () => _launchUrl(url),
             child: Text(
               url,
-              style: const TextStyle(
-                color: Colors.blue,
+              style: TextStyle(
+                color: isMe ? Colors.white : Colors.blue,
                 decoration: TextDecoration.underline,
+                decorationColor: isMe ? Colors.white : Colors.blue,
               ),
             ),
           ),
@@ -172,7 +183,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       spans.add(
         TextSpan(
           text: text.substring(start),
-          style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+          style: TextStyle(
+            color: isMe
+                ? Colors.white
+                : (isDark ? Colors.white : Colors.black87),
+          ),
         ),
       );
     }
@@ -201,13 +216,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey.shade800
+                : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade700,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey.shade300
+                  : Colors.grey.shade700,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -219,6 +238,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.targetName),
@@ -244,7 +265,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 final isMe = msg['sender'] == _currentUid;
                 if (msg['timestamp'] == null) return const SizedBox.shrink();
                 final DateTime messageDate = DateTime.parse(msg['timestamp']);
-                final time = DateFormat('HH:mm').format(messageDate);
+                final time = DateFormat('hm a').format(messageDate); // 12:00 PM
+                final isRead = msg['readStatus'] == true;
 
                 // Date grouping logic
                 bool showDateHeader = false;
@@ -271,20 +293,24 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                        padding: const EdgeInsets.only(
+                          left: 12,
+                          right: 12,
+                          top: 8,
+                          bottom: 8,
                         ),
                         decoration: BoxDecoration(
                           color: isMe
                               ? const Color(0xFF2575FC)
-                              : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(20).copyWith(
+                              : (isDark
+                                    ? const Color(0xFF333333)
+                                    : Colors.grey.shade200),
+                          borderRadius: BorderRadius.circular(16).copyWith(
                             bottomRight: isMe
                                 ? Radius.zero
-                                : const Radius.circular(20),
+                                : const Radius.circular(16),
                             bottomLeft: isMe
-                                ? const Radius.circular(20)
+                                ? const Radius.circular(16)
                                 : Radius.zero,
                           ),
                         ),
@@ -292,49 +318,77 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.75,
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             if (msg['imageUrl'] != null &&
                                 msg['imageUrl'].toString().isNotEmpty)
-                              GestureDetector(
-                                onTap: () => _showZoomedImage(msg['imageUrl']),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    ApiService.fixImageUrl(msg['imageUrl'])!,
-                                    width: double.infinity,
-                                    height: 150,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(Icons.broken_image),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      _showZoomedImage(msg['imageUrl']),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      ApiService.fixImageUrl(msg['imageUrl'])!,
+                                      width: double.infinity,
+                                      height: 150,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(Icons.broken_image),
+                                    ),
                                   ),
                                 ),
                               ),
                             if (msg['content'] != null &&
-                                msg['content'].toString().isNotEmpty) ...[
-                              if (msg['imageUrl'] != null)
-                                const SizedBox(height: 8),
-                              RichText(
-                                text: TextSpan(
-                                  children: _parseContent(
-                                    msg['content']!,
-                                    isMe,
+                                msg['content'].toString().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: _parseContent(
+                                        msg['content']!,
+                                        isMe,
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: isMe
+                                            ? Colors.white
+                                            : (isDark
+                                                  ? Colors.white
+                                                  : Colors.black87),
+                                      ),
+                                    ),
                                   ),
-                                  style: const TextStyle(fontSize: 16),
                                 ),
                               ),
-                            ],
-                            const SizedBox(height: 4),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Text(
-                                time,
-                                style: TextStyle(
-                                  color: isMe ? Colors.white70 : Colors.black54,
-                                  fontSize: 10,
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  time,
+                                  style: TextStyle(
+                                    color: isMe
+                                        ? Colors.white70
+                                        : (isDark
+                                              ? Colors.white60
+                                              : Colors.black54),
+                                    fontSize: 10,
+                                  ),
                                 ),
-                              ),
+                                if (isMe) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    isRead ? Icons.done_all : Icons.done,
+                                    size: 15,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),
@@ -347,24 +401,35 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: Colors.white,
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.image, color: Colors.grey.shade600),
+                  icon: Icon(
+                    Icons.image,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  ),
                   onPressed: _pickAndSendImage,
                 ),
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.grey.shade500 : Colors.grey,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: isDark
+                          ? const Color(0xFF2C2C2C)
+                          : Colors.grey.shade100,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 10,

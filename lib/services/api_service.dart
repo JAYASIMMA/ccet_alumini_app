@@ -250,6 +250,17 @@ class ApiService {
     }
   }
 
+  static Future<void> markMessagesAsRead(String uid, String targetUid) async {
+    try {
+      await put('/messages/mark-read', {
+        'uid': uid, // me
+        'targetUid': targetUid, // sender
+      });
+    } catch (e) {
+      print('Error marking messages as read: $e');
+    }
+  }
+
   // --- Upload Methods ---
   static Future<String?> uploadContentImage(File file) async {
     return await uploadFile(file);
