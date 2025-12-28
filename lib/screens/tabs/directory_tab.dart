@@ -101,10 +101,23 @@ class _DirectoryTabState extends State<DirectoryTab> {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
-                      child: Text(
-                        fullName[0].toUpperCase(),
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                      backgroundImage:
+                          (user['profileImageUrl'] != null &&
+                              user['profileImageUrl'].toString().isNotEmpty)
+                          ? NetworkImage(
+                              ApiService.fixImageUrl(user['profileImageUrl'])!,
+                            )
+                          : null,
+                      child:
+                          (user['profileImageUrl'] == null ||
+                              user['profileImageUrl'].toString().isEmpty)
+                          ? Text(
+                              fullName.isNotEmpty
+                                  ? fullName[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(color: Colors.white),
+                            )
+                          : null,
                     ),
                     title: Text(
                       fullName,

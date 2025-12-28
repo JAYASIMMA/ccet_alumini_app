@@ -42,15 +42,17 @@ class _LoginScreenState extends State<LoginScreen> {
         if (user != null) {
           if (mounted) {
             if (user.displayName == null || user.displayName!.isEmpty) {
-              Navigator.of(context).pushReplacement(
+              Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
                   builder: (context) =>
                       const EditProfileScreen(isOnboarding: true),
                 ),
+                (route) => false,
               );
             } else {
-              Navigator.of(context).pushReplacement(
+              Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
               );
             }
           }
