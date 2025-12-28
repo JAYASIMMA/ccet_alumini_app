@@ -264,8 +264,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 final msg = _messages[index];
                 final isMe = msg['sender'] == _currentUid;
                 if (msg['timestamp'] == null) return const SizedBox.shrink();
-                final DateTime messageDate = DateTime.parse(msg['timestamp']);
-                final time = DateFormat('hm a').format(messageDate); // 12:00 PM
+                final DateTime messageDate = DateTime.parse(
+                  msg['timestamp'],
+                ).toLocal();
+                final time = DateFormat('hh:mm a').format(messageDate);
                 final isRead = msg['readStatus'] == true;
 
                 // Date grouping logic
