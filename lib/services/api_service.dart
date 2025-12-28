@@ -9,8 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static String get baseUrl {
     // For physical device, use the machine's LAN IP.
-    // Found via ipconfig: 192.168.1.33
-    return 'http://192.168.1.33:3000/api';
+    // Found via ipconfig: 192.168.1.34
+    return 'http://192.168.1.34:3000/api';
   }
 
   // --- Cache Helpers ---
