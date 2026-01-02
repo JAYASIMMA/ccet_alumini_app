@@ -5,6 +5,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ccet_alumini_app/services/cache_service.dart';
 
 class ApiService {
   static String get baseUrl {
@@ -15,23 +16,13 @@ class ApiService {
 
   // --- Cache Helpers ---
   static Future<void> _saveToCache(String key, List<dynamic> data) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(key, jsonEncode(data));
-    } catch (e) {
-      print('Error saving to cache ($key): $e');
-    }
+    await CacheService().save(key, data);
   }
 
   static Future<List<dynamic>> _getFromCache(String key) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? cachedString = prefs.getString(key);
-      if (cachedString != null) {
-        return jsonDecode(cachedString) as List<dynamic>;
-      }
-    } catch (e) {
-      print('Error reading from cache ($key): $e');
+    final data = await CacheService().get(key);
+    if (data != null && data is List) {
+      return data;
     }
     return [];
   }
