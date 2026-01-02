@@ -10,7 +10,7 @@ class ApiService {
   static String get baseUrl {
     // For physical device, use the machine's LAN IP.
     // Found via ipconfig: 192.168.1.34
-    return 'http://10.94.90.199:3000/api';
+    return 'http://10.155.254.208:3000/api';
   }
 
   // --- Cache Helpers ---
