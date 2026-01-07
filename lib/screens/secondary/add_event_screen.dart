@@ -71,13 +71,16 @@ class _AddEventScreenState extends State<AddEventScreen> {
         imageUrl = await ApiService.uploadContentImage(_imageFile!);
       }
 
+      print('Debug: _docFile is ${_docFile?.path}');
       List<String> attachments = [];
       if (_docFile != null) {
         final docUrl = await ApiService.uploadDocument(_docFile!);
+        print('Debug: Uploaded docUrl: $docUrl');
         if (docUrl != null) {
           attachments.add(docUrl);
         }
       }
+      print('Debug: Final Attachments list: $attachments');
 
       await ApiService.createEvent({
         'title': _titleController.text,

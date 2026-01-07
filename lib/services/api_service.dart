@@ -306,7 +306,7 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['imageUrl']; // Backend returns 'imageUrl' key currently
+        return data['imageUrl'] ?? data['fileUrl'] ?? data['file'] ?? data['url'];
       } else {
         print('Upload Failed: ${response.body}');
         return null;

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:quickalert/quickalert.dart';
 
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+
 class EditEventScreen extends StatefulWidget {
   final Map<String, dynamic> event;
 
@@ -20,6 +23,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
   late TextEditingController _locationController;
   late TextEditingController _imageController;
   DateTime? _selectedDate;
+  File? _newDocFile;
+  List<String> _existingAttachments = [];
   bool _isLoading = false;
 
   @override
@@ -31,6 +36,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
     );
     _locationController = TextEditingController(text: widget.event['location']);
     _imageController = TextEditingController(text: widget.event['imageUrl']);
+    _existingAttachments = List<String>.from(widget.event['attachments'] ?? []);
 
     // Parse existing date
     try {
@@ -85,6 +91,18 @@ class _EditEventScreenState extends State<EditEventScreen> {
     }
   }
 
+  Future<void> _pickDocument() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (result != null) {
+      setState(() {
+        _newDocFile = File(result.files.single.path!);
+      });
+    }
+  }
+
   Future<void> _updateEvent() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDate == null) {
@@ -96,15 +114,29 @@ class _EditEventScreenState extends State<EditEventScreen> {
 
     setState(() => _isLoading = true);
 
-    final updatedData = {
-      'title': _titleController.text,
-      'description': _descriptionController.text,
-      'date': _selectedDate!.toIso8601String(),
-      'location': _locationController.text,
-      'imageUrl': _imageController.text,
-    };
-
     try {
+      String? newDocUrl;
+      print('Debug: _newDocFile is ${_newDocFile?.path}');
+      if (_newDocFile != null) {
+        newDocUrl = await ApiService.uploadDocument(_newDocFile!);
+        print('Debug: Uploaded newDocUrl: $newDocUrl');
+      }
+
+      final List<String> finalAttachments = [..._existingAttachments];
+      if (newDocUrl != null) {
+        finalAttachments.add(newDocUrl);
+      }
+      print('Debug: Final Attachments list for Update: $finalAttachments');
+
+      final updatedData = {
+        'title': _titleController.text,
+        'description': _descriptionController.text,
+        'date': _selectedDate!.toIso8601String(),
+        'location': _locationController.text,
+        'imageUrl': _imageController.text,
+        'attachments': finalAttachments,
+      };
+
       await ApiService.updateEvent(widget.event['_id'], updatedData);
       if (mounted) {
         await QuickAlert.show(
@@ -187,6 +219,66 @@ class _EditEventScreenState extends State<EditEventScreen> {
                   labelText: 'Image URL',
                   hintText: 'https://example.com/image.jpg',
                 ),
+              ),
+              const SizedBox(height: 16),
+              // Attachments UI
+              Align(
+                alignment: Alignment.centerLeft,
+                child: const Text(
+                  'Attachments',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (_existingAttachments.isEmpty && _newDocFile == null)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    'No attachments',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+              ..._existingAttachments.map(
+                (url) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                  title: Text(
+                    url.split('/').last,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      setState(() {
+                        _existingAttachments.remove(url);
+                      });
+                    },
+                  ),
+                ),
+              ),
+              if (_newDocFile != null)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.picture_as_pdf, color: Colors.green),
+                  title: Text(
+                    "New: ${_newDocFile!.path.split(Platform.pathSeparator).last}",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _newDocFile = null;
+                      });
+                    },
+                  ),
+                ),
+              TextButton.icon(
+                onPressed: _pickDocument,
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Add PDF Attachment'),
               ),
               const SizedBox(height: 16),
               TextFormField(

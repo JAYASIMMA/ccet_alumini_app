@@ -206,32 +206,20 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
                       ),
                       const SizedBox(height: 24),
                       if (attachments.isNotEmpty) ...[
-                        const Text(
-                          "Attachments",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _openPdf(attachments.first),
+                            icon: const Icon(Icons.picture_as_pdf),
+                            label: const Text('View Attached PDF'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade50,
+                              foregroundColor: Colors.red,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        ...attachments
-                            .map(
-                              (url) => Card(
-                                child: ListTile(
-                                  leading: const Icon(
-                                    Icons.picture_as_pdf,
-                                    color: Colors.red,
-                                  ),
-                                  title: const Text("View Attachment (PDF)"),
-                                  trailing: const Icon(
-                                    Icons.arrow_forward_ios,
-                                    size: 16,
-                                  ),
-                                  onTap: () => _openPdf(url),
-                                ),
-                              ),
-                            )
-                            .toList(),
                       ],
                       if (_downloading)
                         const Padding(
