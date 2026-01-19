@@ -142,13 +142,15 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            DateFormat.yMMMMEEEEd().format(
-                              DateTime.parse(event['date']),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                          Expanded(
+                            child: Text(
+                              DateFormat.yMMMMEEEEd().format(
+                                DateTime.parse(event['date']),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
                         ],
@@ -162,13 +164,15 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            DateFormat.jm().format(
-                              DateTime.parse(event['date']),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                          Expanded(
+                            child: Text(
+                              DateFormat.jm().format(
+                                DateTime.parse(event['date']),
+                              ),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
                         ],
@@ -182,11 +186,13 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            event['location'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
+                          Expanded(
+                            child: Text(
+                              event['location'],
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
                         ],
@@ -206,20 +212,35 @@ class _EventViewerScreenState extends State<EventViewerScreen> {
                       ),
                       const SizedBox(height: 24),
                       if (attachments.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _openPdf(attachments.first),
-                            icon: const Icon(Icons.picture_as_pdf),
-                            label: const Text('View Attached PDF'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade50,
-                              foregroundColor: Colors.red,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          "Attachments",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        ...attachments.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final url = entry.value;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _openPdf(url),
+                                icon: const Icon(Icons.picture_as_pdf),
+                                label: Text('View Attachment ${index + 1}'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red.shade50,
+                                  foregroundColor: Colors.red,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
                       ],
                       if (_downloading)
                         const Padding(

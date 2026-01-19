@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:ccet_alumini_app/services/api_service.dart';
 import 'package:flutter/material.dart';
 
@@ -431,9 +432,17 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
   Widget _buildUserListItem(Map<String, dynamic> user) {
     return ListTile(
       leading: _buildUserAvatar(user, 24),
-      title: Text('${user['username'] ?? user['firstName']}'),
-      subtitle: Text(
+      title: AutoSizeText(
+        '${user['username'] ?? user['firstName']}',
+        maxLines: 1,
+        minFontSize: 12,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: AutoSizeText(
         '${user['email']} • ${user['role']?.toUpperCase() ?? 'UNK'}',
+        maxLines: 1,
+        minFontSize: 10,
+        overflow: TextOverflow.ellipsis,
       ),
       onTap: () => _showUserDialog(user: user),
       trailing: IconButton(
@@ -457,32 +466,37 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
             children: [
               _buildUserAvatar(user, 30),
               const SizedBox(height: 8),
-              Text(
+              AutoSizeText(
                 '${user['username'] ?? user['firstName']}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
                 maxLines: 1,
+                minFontSize: 12,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
-              Text(
+              AutoSizeText(
                 user['email'] ?? '',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 maxLines: 1,
+                minFontSize: 8,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
-              Text(
+              AutoSizeText(
                 user['role']?.toUpperCase() ?? 'UNK',
                 style: TextStyle(
                   color: Theme.of(context).primaryColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
+                maxLines: 1,
+                minFontSize: 10,
+                textAlign: TextAlign.center,
               ),
               const Spacer(),
               Align(

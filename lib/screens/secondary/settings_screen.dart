@@ -181,6 +181,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? const Icon(Icons.check, color: Colors.blue)
                             : null,
                       ),
+                      ListTile(
+                        title: const Text(
+                          'Playfair Display (Serif)',
+                          style: TextStyle(fontFamily: 'Playfair Display'),
+                        ),
+                        onTap: () {
+                          themeProvider.setFontFamily('Playfair Display');
+                          Navigator.pop(context);
+                        },
+                        trailing: themeProvider.fontFamily == 'Playfair Display'
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                      ),
                       const SizedBox(height: 10),
                     ],
                   );

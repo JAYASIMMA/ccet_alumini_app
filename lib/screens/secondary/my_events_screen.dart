@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:ccet_alumini_app/screens/secondary/add_event_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/edit_event_screen.dart';
 import 'package:ccet_alumini_app/screens/secondary/event_viewer_screen.dart';
@@ -184,12 +185,15 @@ class _MyEventsScreenState extends State<MyEventsScreen> {
                                     ],
                                   ),
                                 ),
-                                title: Text(
+                                title: AutoSizeText(
                                   event['title'],
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
+                                  maxLines: 1,
+                                  minFontSize: 12,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,11 +205,14 @@ class _MyEventsScreenState extends State<MyEventsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
+                                    AutoSizeText(
                                       event['location'],
                                       style: const TextStyle(
                                         color: Colors.grey,
                                       ),
+                                      maxLines: 1,
+                                      minFontSize: 10,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),

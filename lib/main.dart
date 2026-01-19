@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ccet_alumini_app/services/auth_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart';
+import 'package:ccet_alumini_app/screens/splash_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'package:ccet_alumini_app/providers/theme_provider.dart';
@@ -30,6 +31,8 @@ class MyApp extends StatelessWidget {
         return GoogleFonts.plusJakartaSansTextTheme(baseTheme);
       case 'Satoshi (Outfit)':
         return GoogleFonts.outfitTextTheme(baseTheme);
+      case 'Playfair Display':
+        return GoogleFonts.playfairDisplayTextTheme(baseTheme);
       case 'Poppins':
       default:
         return GoogleFonts.poppinsTextTheme(baseTheme);
@@ -42,6 +45,8 @@ class MyApp extends StatelessWidget {
         return GoogleFonts.plusJakartaSans(fontWeight: fontWeight);
       case 'Satoshi (Outfit)':
         return GoogleFonts.outfit(fontWeight: fontWeight);
+      case 'Playfair Display':
+        return GoogleFonts.playfairDisplay(fontWeight: fontWeight);
       case 'Poppins':
       default:
         return GoogleFonts.poppins(fontWeight: fontWeight);
@@ -202,20 +207,7 @@ class MyApp extends StatelessWidget {
           child: child!,
         );
       },
-      home: FutureBuilder(
-        future: AuthService().tryAutoLogin(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          if (snapshot.data == true) {
-            return const HomeScreen();
-          }
-          return const WelcomeScreen();
-        },
-      ),
+      home: const SplashScreen(),
     );
   }
 }
